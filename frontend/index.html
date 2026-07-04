@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BurchTickets — Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --pearl:#FFFFFF; --pearl-dim:#F4F3F1; --card:#FFFFFF; --line:#E7E5E1;
+    --onyx:#14161A; --ink-soft:#5F6167;
+    --accent:#F4D53E; --accent-hi:#FFE066;
+    --navy:#20232C; --navy-soft:#9DA1AE;
+    --wine:#C0364A; --jade:#2F6F62; --err:#C0364A;
+    --champagne:#B08D57; --champagne-hi:#C7A56F;
+    --display:'Fraunces',serif; --body:'Inter',sans-serif; --mono:'JetBrains Mono',monospace;
+    --shadow: 0 1px 2px rgba(20,22,26,.05), 0 8px 24px rgba(20,22,26,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--pearl);color:var(--onyx);font-family:var(--body);}
+  a{color:inherit;text-decoration:none;cursor:pointer;}
+  .hidden{display:none !important;}
+
+  header{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;
+    padding:18px clamp(20px,5vw,60px);background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);}
+  .logo{font-family:var(--display);font-size:22px;font-weight:600;cursor:pointer;letter-spacing:.2px;}
+  .logo em{font-style:italic;color:var(--onyx);font-weight:500;}
+  .logo::before{content:'';display:inline-block;width:10px;height:10px;background:var(--accent);border-radius:50%;margin-right:8px;vertical-align:middle;}
+  .nav-links{display:flex;align-items:center;gap:26px;}
+  .nav-links a{font-size:13px;letter-spacing:.4px;font-weight:600;color:var(--ink-soft);}
+  .nav-links a:hover{color:var(--onyx);}
+  .nav-cta{background:var(--accent);color:var(--onyx);font-size:12px;letter-spacing:.4px;font-weight:700;
+    text-transform:uppercase;padding:11px 22px;border-radius:8px;transition:background .2s;}
+  .nav-cta:hover{background:var(--accent-hi);}
+  .nav-user{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:13px;}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--onyx);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .logout-btn{color:var(--ink-soft);cursor:pointer;}
+  .logout-btn:hover{color:var(--err);}
+
+  .toast{position:fixed;top:20px;right:20px;z-index:100;background:var(--onyx);color:var(--pearl);
+    border-radius:10px;padding:14px 20px;font-size:13px;transform:translateX(120%);transition:transform .3s;
+    max-width:320px;box-shadow:var(--shadow);}
+  .toast.show{transform:translateX(0);}
+  .toast.err{background:var(--err);}
+
+  .demo-banner{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--onyx);
+    color:var(--pearl);font-family:var(--mono);font-size:11.5px;letter-spacing:.3px;padding:9px 20px;text-align:center;}
+  .demo-banner b{color:var(--accent);}
+  .demo-banner .demo-x{cursor:pointer;color:var(--navy-soft);margin-left:8px;font-family:var(--body);}
+  .demo-banner .demo-x:hover{color:var(--pearl);}
+
+  .page{display:none;min-height:80vh;}
+  .page.active{display:block;}
+
+  .section{padding:clamp(50px,7vw,90px) clamp(20px,5vw,60px);}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--champagne);
+    display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .eyebrow::before{content:'';width:26px;height:1px;background:var(--champagne);}
+  h1{font-family:var(--display);font-style:italic;font-weight:500;font-size:clamp(36px,6vw,62px);
+    max-width:18ch;line-height:1.08;color:var(--onyx);}
+  .sub{color:var(--ink-soft);margin-top:16px;max-width:52ch;line-height:1.65;font-size:16px;}
+
+  .btn{display:inline-block;font-size:13px;letter-spacing:.4px;text-transform:uppercase;font-weight:700;
+    padding:14px 26px;cursor:pointer;border:none;font-family:var(--body);border-radius:8px;transition:transform .15s,box-shadow .15s;}
+  .btn-primary{background:var(--accent);color:var(--onyx);}
+  .btn-primary:hover{background:var(--accent-hi);transform:translateY(-1px);}
+  .btn-ghost{border:1.5px solid var(--onyx);color:var(--onyx);background:transparent;}
+  .btn-ghost:hover{background:var(--onyx);color:#fff;}
+  .btn-block{width:100%;text-align:center;}
+  .btn[disabled]{opacity:.4;cursor:not-allowed;}
+
+  .form-card{max-width:440px;margin:0 auto;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:40px;box-shadow:var(--shadow);}
+  .form-card h2{font-family:var(--display);font-style:italic;font-weight:500;font-size:28px;margin-bottom:6px;}
+  .form-card .sub2{color:var(--ink-soft);font-size:14px;margin-bottom:26px;}
+  .form-group{margin-bottom:18px;}
+  .form-group label{display:block;font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px;}
+  .form-group input, .form-group select, .form-group textarea{
+    width:100%;background:var(--pearl);border:1px solid var(--line);color:var(--onyx);border-radius:8px;
+    padding:12px 14px;font-family:var(--body);font-size:14px;}
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus{outline:2px solid var(--champagne);outline-offset:1px;}
+  .alt-action{margin-top:18px;text-align:center;font-size:13px;color:var(--ink-soft);}
+  .alt-action a{color:var(--wine);font-weight:600;}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:34px;}
+  .stat-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;position:relative;
+    box-shadow:var(--shadow);overflow:hidden;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--champagne),var(--wine),var(--jade),var(--champagne));background-size:300% 100%;}
+  .stat-label{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);}
+  .stat-value{font-family:var(--display);font-size:30px;font-style:italic;font-weight:500;color:var(--onyx);margin-top:8px;}
+
+  .dash-layout{display:flex;min-height:80vh;}
+  .dash-sidebar{width:230px;border-right:1px solid var(--line);padding:30px 0;background:var(--pearl-dim);}
+  .side-item{padding:14px 26px;font-size:13px;letter-spacing:.4px;color:var(--ink-soft);cursor:pointer;
+    border-left:3px solid transparent;display:flex;align-items:center;gap:10px;}
+  .side-item:hover{color:var(--onyx);}
+  .side-item.active{color:var(--wine);border-left-color:var(--wine);background:var(--card);font-weight:600;}
+  .dash-content{flex:1;padding:36px clamp(20px,4vw,50px);}
+  .dash-panel{display:none;}
+  .dash-panel.active{display:block;}
+  .panel-head{margin-bottom:24px;}
+  .panel-head h2{font-family:var(--display);font-style:italic;font-weight:500;font-size:28px;}
+  .panel-head p{color:var(--ink-soft);margin-top:4px;font-size:14px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);border-radius:14px;overflow:hidden;
+    box-shadow:var(--shadow);}
+  th{text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--ink-soft);padding:14px 16px;border-bottom:1px solid var(--line);background:var(--pearl-dim);}
+  td{padding:14px 16px;border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  .badge{font-family:var(--mono);font-size:10px;padding:5px 10px;text-transform:uppercase;letter-spacing:.5px;border-radius:999px;}
+  .order-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px;box-shadow:var(--shadow);}
+  .badge.draft{background:var(--pearl-dim);color:var(--ink-soft);}
+  .badge.published{background:rgba(47,111,98,.12);color:var(--jade);}
+
+  .event-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:22px;}
+  .event-card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    box-shadow:var(--shadow);transition:transform .15s;cursor:pointer;}
+  .event-card:hover{transform:translateY(-3px);}
+  .event-cover{position:relative;height:170px;background-size:cover;background-position:center;overflow:hidden;}
+  .event-cover img{width:100%;height:100%;object-fit:cover;display:block;}
+  .event-tag{position:absolute;top:12px;left:12px;background:rgba(255,255,255,.92);color:var(--onyx);
+    font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:6px 12px;border-radius:999px;}
+  .event-date-badge{position:absolute;top:12px;right:12px;background:var(--onyx);color:#fff;text-align:center;
+    padding:6px 10px;border-radius:8px;font-family:var(--mono);line-height:1.2;}
+  .event-date-badge .dnum{font-size:16px;font-weight:700;display:block;}
+  .event-date-badge .dmon{font-size:9px;letter-spacing:1px;text-transform:uppercase;}
+  .event-card-body{padding:18px 20px 20px;}
+  .event-card h3{font-family:var(--display);font-style:italic;font-weight:500;font-size:19px;color:var(--onyx);line-height:1.25;}
+  .event-card .venue{color:var(--ink-soft);font-size:13px;margin-top:6px;}
+  .event-card .price-row{margin-top:12px;font-size:13px;color:var(--ink-soft);}
+  .event-card .price-row b{color:var(--onyx);font-size:15px;}
+
+  .stepper{display:flex;align-items:center;gap:10px;margin:26px 0 34px;}
+  .step{display:flex;align-items:center;gap:10px;}
+  .step-dot{width:28px;height:28px;border-radius:50%;background:var(--pearl-dim);color:var(--ink-soft);
+    display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;
+    border:1px solid var(--line);}
+  .step.active .step-dot{background:var(--wine);color:#fff;border-color:var(--wine);}
+  .step.done .step-dot{background:var(--jade);color:#fff;border-color:var(--jade);}
+  .step-label{font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-soft);}
+  .step.active .step-label{color:var(--onyx);font-weight:600;}
+  .step-line{width:36px;height:1px;background:var(--line);}
+
+  .checkout-view{display:none;}
+  .checkout-view.active{display:block;}
+  .pay-method-btn{flex:1;padding:11px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-soft);transition:.15s;}
+  .pay-method-btn.active{border-color:var(--champagne);color:var(--ink);background:rgba(201,169,97,.08);}
+
+  .tier-row{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;
+    border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--card);}
+  .tier-row .qty-controls{display:flex;align-items:center;gap:10px;}
+  .qty-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--pearl);
+    font-size:16px;cursor:pointer;color:var(--onyx);}
+  .qty-btn:hover{border-color:var(--champagne);}
+  .qty-value{font-family:var(--mono);font-weight:700;min-width:20px;text-align:center;}
+
+  .order-summary{background:var(--pearl-dim);border-radius:14px;padding:20px;margin-top:20px;font-size:14px;}
+  .order-summary .row{display:flex;justify-content:space-between;padding:6px 0;color:var(--ink-soft);}
+  .order-summary .row.total{color:var(--onyx);font-weight:700;border-top:1px solid var(--line);margin-top:6px;padding-top:12px;}
+
+  .seller-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:flex-start;max-width:1080px;margin:0 auto;}
+  @media (max-width:820px){ .seller-grid{grid-template-columns:1fr;} }
+
+  .status-banner{border-radius:14px;padding:18px 22px;margin-bottom:28px;display:flex;align-items:center;gap:14px;border:1px solid var(--line);}
+  .status-banner.pending{background:rgba(176,141,87,.1);border-color:rgba(176,141,87,.3);}
+  .status-banner.verified{background:rgba(47,111,98,.1);border-color:rgba(47,111,98,.3);}
+  .status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .status-banner.pending .status-dot{background:var(--champagne);}
+  .status-banner.verified .status-dot{background:var(--jade);}
+  .status-banner .status-title{font-weight:700;font-size:14px;}
+  .status-banner .status-sub{color:var(--ink-soft);font-size:13px;margin-top:2px;}
+
+  .ticket-download{display:flex;justify-content:space-between;align-items:center;background:var(--card);
+    border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow);}
+  .ticket-download .tname{font-family:var(--display);font-style:italic;font-size:16px;}
+  .ticket-download .tcode{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:3px;}
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ---- Mookh-style extras ---- */
+  .hero-search{margin-top:34px;max-width:560px;display:flex;background:var(--card);border:1.5px solid var(--onyx);
+    border-radius:10px;overflow:hidden;}
+  .hero-search input{flex:1;border:none;padding:15px 18px;font-family:var(--body);font-size:14px;outline:none;}
+  .hero-search button{background:var(--accent);border:none;padding:0 22px;font-weight:700;font-size:13px;
+    text-transform:uppercase;letter-spacing:.4px;cursor:pointer;}
+  .hero-search button:hover{background:var(--accent-hi);}
+
+  .trending-eyebrow{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;
+    letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px;}
+  .trending-eyebrow::before{content:'';width:22px;height:1px;background:var(--onyx);}
+  .trending-h2{font-family:var(--display);font-style:italic;font-weight:500;font-size:clamp(28px,4vw,42px);margin-bottom:34px;}
+  .see-all-btn{display:inline-block;margin-top:36px;border:1.5px solid var(--onyx);border-radius:999px;
+    padding:13px 30px;font-size:13px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+  .see-all-btn:hover{background:var(--onyx);color:#fff;}
+
+  .tabs{display:flex;gap:28px;border-bottom:1px solid var(--line);margin-bottom:22px;}
+  .tab{padding:10px 2px 14px;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;
+    border-bottom:2px solid transparent;}
+  .tab.active{color:var(--onyx);border-color:var(--accent);}
+
+  .tier-row{display:block;padding:18px 20px;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;background:var(--card);}
+  .tier-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
+  .tier-name{font-weight:700;font-size:15px;}
+  .tier-price{font-family:var(--mono);font-size:14px;color:var(--onyx);margin-top:4px;}
+  .tier-valid{color:var(--ink-soft);font-size:12.5px;margin-top:10px;}
+  .tier-more{color:var(--onyx);font-size:12.5px;text-decoration:underline;margin-top:6px;display:inline-block;cursor:pointer;}
+
+  .subtotal-bar{position:sticky;bottom:0;background:var(--pearl-dim);border-top:1px solid var(--line);
+    padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:0 0 12px 12px;
+    font-weight:700;margin-top:6px;}
+  .subtotal-bar .lbl{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);font-weight:600;}
+  .buy-row{display:flex;gap:12px;margin-top:16px;}
+  .buy-row .btn{flex:1;text-align:center;}
+
+  .cover-upload{border:1.5px dashed var(--line);border-radius:12px;padding:20px;text-align:center;cursor:pointer;
+    background:var(--pearl-dim);transition:border-color .2s;}
+  .cover-upload:hover{border-color:var(--accent);}
+  .cover-upload img{max-width:100%;max-height:160px;border-radius:8px;margin-top:10px;}
+  .cover-upload input{display:none;}
+
+  footer.site-footer{background:var(--navy);color:#fff;padding:60px clamp(20px,6vw,72px) 30px;margin-top:0;}
+  .footer-top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;padding-bottom:40px;}
+  @media (max-width:820px){ .footer-top{grid-template-columns:1fr 1fr;} }
+  .footer-brand .logo{color:#fff;}
+  .footer-brand .logo em{color:#fff;}
+  .footer-brand p{color:var(--navy-soft);font-size:13px;margin-top:14px;max-width:32ch;line-height:1.6;}
+  .newsletter{margin-top:18px;display:flex;max-width:320px;border:1px solid rgba(255,255,255,.2);border-radius:8px;overflow:hidden;}
+  .newsletter input{flex:1;background:transparent;border:none;padding:11px 14px;color:#fff;font-size:13px;outline:none;}
+  .newsletter input::placeholder{color:var(--navy-soft);}
+  .newsletter button{background:var(--accent);border:none;padding:0 16px;font-weight:700;font-size:11px;
+    text-transform:uppercase;cursor:pointer;}
+  .footer-col h4{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--navy-soft);margin-bottom:16px;}
+  .footer-col a, .footer-col p{display:block;font-size:13.5px;color:#EDEDED;margin-bottom:11px;}
+  .footer-col a:hover{color:var(--accent);}
+  .footer-bottom{border-top:1px solid rgba(255,255,255,.12);padding-top:20px;display:flex;justify-content:space-between;
+    flex-wrap:wrap;gap:10px;font-size:12px;color:var(--navy-soft);}
+  /* ---- tier manager modal ---- */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:60;
+    display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal-backdrop.hidden{display:none;}
+  .modal-card{background:var(--card);border-radius:16px;padding:32px;max-width:460px;width:100%;
+    max-height:85vh;overflow-y:auto;box-shadow:0 30px 60px rgba(20,22,26,.3);}
+  .modal-card h2{font-family:var(--display);font-style:italic;font-weight:500;font-size:22px;}
+  .tier-list-row{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;
+    border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--pearl-dim);}
+  .tier-list-row .tln{font-weight:700;font-size:13.5px;}
+  .tier-list-row .tlm{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  /* ---- floating "What's happening in Nairobi" widget ---- */
+  .nairobi-feed{position:fixed;right:20px;bottom:20px;z-index:80;font-family:var(--body);}
+  .nairobi-feed-toggle{display:flex;align-items:center;gap:10px;background:var(--onyx);color:#fff;
+    border:none;border-radius:999px;padding:13px 20px 13px 16px;font-size:12.5px;font-weight:600;
+    cursor:pointer;box-shadow:0 10px 30px rgba(20,22,26,.25);}
+  .pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--jade);position:relative;flex-shrink:0;}
+  .pulse-dot::after{content:'';position:absolute;inset:-4px;border-radius:50%;background:var(--jade);
+    opacity:.5;animation:feedpulse 1.8s ease-out infinite;}
+  @keyframes feedpulse{0%{transform:scale(.6);opacity:.6;}100%{transform:scale(2.2);opacity:0;}}
+  .nairobi-feed-panel{position:absolute;right:0;bottom:56px;width:320px;max-height:420px;
+    background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 50px rgba(20,22,26,.25);
+    overflow:hidden;display:flex;flex-direction:column;}
+  .nairobi-feed-panel.hidden{display:none;}
+  .nairobi-feed-head{display:flex;justify-content:space-between;align-items:baseline;padding:14px 18px;
+    border-bottom:1px solid var(--line);background:var(--pearl-dim);}
+  .nairobi-feed-head span:first-child{font-family:var(--display);font-style:italic;font-weight:600;font-size:15px;}
+  .nairobi-feed-updated{font-family:var(--mono);font-size:10px;color:var(--ink-soft);text-transform:uppercase;}
+  .nairobi-feed-list{overflow-y:auto;padding:8px;}
+  .nairobi-feed-empty{padding:20px 14px;color:var(--ink-soft);font-size:13px;text-align:center;}
+  .nairobi-feed-item{display:block;padding:10px 12px;border-radius:10px;cursor:pointer;}
+  .nairobi-feed-item:hover{background:var(--pearl-dim);}
+  .nairobi-feed-item .fi-title{font-size:13px;font-weight:600;color:var(--onyx);line-height:1.3;}
+  .nairobi-feed-item .fi-meta{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
+  .nairobi-feed-item .fi-venue{font-size:11.5px;color:var(--ink-soft);}
+  .nairobi-feed-item .fi-source{font-family:var(--mono);font-size:9px;letter-spacing:.5px;text-transform:uppercase;
+    padding:2px 7px;border-radius:999px;background:var(--pearl-dim);color:var(--ink-soft);flex-shrink:0;}
+  .nairobi-feed-item .fi-source.src-burchtickets{background:rgba(244,213,62,.25);color:#8a6d00;}
+  @media (max-width:480px){ .nairobi-feed-panel{width:calc(100vw - 40px);} }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<div class="nairobi-feed" id="nairobiFeed">
+  <button class="nairobi-feed-toggle" id="nairobiFeedToggle" onclick="toggleNairobiFeed()">
+    <span class="pulse-dot"></span>
+    <span>What's happening in Nairobi</span>
+  </button>
+  <div class="nairobi-feed-panel hidden" id="nairobiFeedPanel">
+    <div class="nairobi-feed-head">
+      <span>Live in Nairobi</span>
+      <span class="nairobi-feed-updated" id="nairobiFeedUpdated">updating…</span>
+    </div>
+    <div class="nairobi-feed-list" id="nairobiFeedList">
+      <div class="nairobi-feed-empty">Loading nearby events…</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop hidden" id="tierModal">
+  <div class="modal-card" id="tierModalContent"></div>
+</div>
+
+<div class="modal-backdrop hidden" id="buyerAuthModal">
+  <div class="modal-card" id="buyerAuthModalContent"></div>
+</div>
+
+<div class="demo-banner" id="demoBanner"><span><b>Interactive demo</b> — every flow works end-to-end with sample data, running entirely in this browser. No real M-Pesa charges are made. <a onclick="showToast('This demo simulates the backend in your browser (localStorage). Connect the real Node/Postgres API described in the project README to go live with real payments and a shared, multi-device database.')" style="text-decoration:underline;cursor:pointer;">Learn more</a></span><span class="demo-x" onclick="document.getElementById('demoBanner').style.display='none'">✕</span></div>
+<header>
+  <div class="logo" onclick="navigate('home')">Burch<em>Tickets</em></div>
+  <div class="nav-links" id="mainNav">
+    <a onclick="navigate('home')">Home</a>
+    <a onclick="navigate('browse')">Browse Events</a>
+    <a onclick="openMyTickets()">My Tickets</a>
+    <span class="nav-user hidden" id="navBuyerUser">
+      <span id="navBuyerName">Buyer</span>
+      <span class="logout-btn" onclick="logoutBuyer()">Log out</span>
+    </span>
+    <a onclick="openBuyerAuth('login')" id="navBuyerLogin">Log in</a>
+    <a onclick="navigate('register')" id="navRegister">Sell tickets</a>
+    <a onclick="navigate('login')" id="navLogin">Organizer login</a>
+    <span class="nav-user hidden" id="navUser">
+      <span id="navCompanyName">Company</span>
+      <span class="avatar" id="navAvatar">C</span>
+      <span class="logout-btn" onclick="logout()">Log out</span>
+    </span>
+    <a class="nav-cta" onclick="navigate('register')" id="navCta">Get Started</a>
+  </div>
+</header>
+
+<div class="page active" id="page-home">
+  <section class="section" style="padding-bottom:20px;">
+    <div class="eyebrow">Nairobi · Event Ticketing</div>
+    <h1>Find your next night out.</h1>
+    <p class="sub">Browse live events, pay with M-Pesa, and get your ticket as a scannable PDF — ready to show at the door.</p>
+    <div class="hero-search">
+      <input type="text" id="heroSearch" placeholder="Search events, venues, or organizers…">
+      <button onclick="navigate('browse')">Search</button>
+    </div>
+    <div style="margin-top:18px;display:flex;gap:16px;flex-wrap:wrap;">
+      <a class="btn btn-ghost" onclick="navigate('register')" style="padding:10px 20px;font-size:12px;">I'm an organizer — sell tickets</a>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:10px;">
+    <div class="trending-eyebrow">Trending in Nairobi</div>
+    <h2 class="trending-h2">What's on this week</h2>
+    <div class="event-grid" id="trendingGrid"></div>
+    <div style="text-align:center;">
+      <a class="see-all-btn" onclick="navigate('browse')">See all events</a>
+    </div>
+  </section>
+</div>
+
+<div class="page" id="page-browse">
+  <section class="section">
+    <div class="eyebrow">Live now</div>
+    <h1 style="font-size:clamp(30px,4vw,42px);">Published events</h1>
+    <div class="event-grid" id="publicEventGrid" style="margin-top:30px;"></div>
+  </section>
+</div>
+
+<div class="page" id="page-event">
+  <section class="section" id="eventDetailRoot"></section>
+</div>
+
+<div class="page" id="page-register">
+  <section class="section" style="min-height:80vh;">
+    <div class="seller-grid">
+
+      <div>
+        <div class="eyebrow">For organizers</div>
+        <h1 style="font-size:clamp(30px,4vw,42px);">Sell tickets, get paid — here's exactly how.</h1>
+        <p class="sub">No monthly fees, no listing fees. We only make money when you do.</p>
+
+        <div style="margin-top:34px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:var(--shadow);">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;">
+            <span style="font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Commission</span>
+            <span style="font-family:var(--display);font-style:italic;font-size:28px;color:var(--wine);">10%</span>
+          </div>
+          <p style="color:var(--ink-soft);font-size:13px;margin-top:6px;line-height:1.6;">
+            Charged on top of your ticket price and paid by the buyer at checkout — so the 10% never comes out of your listed price. You keep 100% of what you set.
+          </p>
+        </div>
+
+        <div style="margin-top:28px;display:flex;flex-direction:column;gap:20px;">
+          <div style="display:flex;gap:14px;">
+            <div class="step-dot" style="flex-shrink:0;">1</div>
+            <div><div style="font-weight:600;font-size:14px;">Register your company</div><div style="color:var(--ink-soft);font-size:13px;margin-top:2px;">Takes under two minutes — company name, email, and a password.</div></div>
+          </div>
+          <div style="display:flex;gap:14px;">
+            <div class="step-dot" style="flex-shrink:0;">2</div>
+            <div><div style="font-weight:600;font-size:14px;">Create and publish your event</div><div style="color:var(--ink-soft);font-size:13px;margin-top:2px;">Add ticket tiers and go live immediately — no waiting to start listing.</div></div>
+          </div>
+          <div style="display:flex;gap:14px;">
+            <div class="step-dot" style="flex-shrink:0;">3</div>
+            <div><div style="font-weight:600;font-size:14px;">Get verified</div><div style="color:var(--ink-soft);font-size:13px;margin-top:2px;">Our team reviews new accounts within 24 hours. You can sell while pending — payouts release once verified.</div></div>
+          </div>
+          <div style="display:flex;gap:14px;">
+            <div class="step-dot" style="flex-shrink:0;">4</div>
+            <div><div style="font-weight:600;font-size:14px;">Get paid</div><div style="color:var(--ink-soft);font-size:13px;margin-top:2px;">Buyer pays via M-Pesa, we deduct our 10%, and the rest is yours — tracked live in your dashboard.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card" style="margin:0;">
+        <h2>Register your company</h2>
+        <p class="sub2">Start listing events in minutes.</p>
+        <form id="registerForm" onsubmit="registerCompany(event)">
+          <div class="form-group"><label>Company name</label><input type="text" id="regCompany" required></div>
+          <div class="form-group"><label>Business email</label><input type="email" id="regEmail" required></div>
+          <div class="form-group"><label>Password</label><input type="password" id="regPassword" minlength="6" required></div>
+          <div class="form-group">
+            <label>Business type</label>
+            <select id="regType">
+              <option value="events">Events & Entertainment</option>
+              <option value="hospitality">Hospitality & Venues</option>
+              <option value="arts">Arts & Culture</option>
+              <option value="corporate">Corporate & Conferences</option>
+            </select>
+          </div>
+          <div class="form-group"><label>M-Pesa paybill / till (optional)</label><input type="text" id="regMpesa"></div>
+          <button type="submit" class="btn btn-primary btn-block">Register company</button>
+          <div class="alt-action">Already registered? <a onclick="navigate('login')">Log in</a></div>
+        </form>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+
+<div class="page" id="page-login">
+  <section class="section" style="min-height:80vh;display:flex;align-items:center;justify-content:center;">
+    <div class="form-card">
+      <h2>Welcome back</h2>
+      <p class="sub2">Log in to your seller dashboard.</p>
+      <form id="loginForm" onsubmit="loginCompany(event)">
+        <div class="form-group"><label>Email</label><input type="email" id="loginEmail" required></div>
+        <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required></div>
+        <button type="submit" class="btn btn-primary btn-block">Login</button>
+        <div class="alt-action">New here? <a onclick="navigate('register')">Register</a></div>
+      </form>
+    </div>
+  </section>
+</div>
+
+<div class="page" id="page-dashboard">
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <div class="side-item active" data-panel="overview" onclick="switchPanel('overview')">Overview</div>
+      <div class="side-item" data-panel="events" onclick="switchPanel('events')">My Events</div>
+      <div class="side-item" data-panel="create" onclick="switchPanel('create')">Create Event</div>
+    </aside>
+    <main class="dash-content">
+      <div class="dash-panel active" id="panel-overview">
+        <div class="panel-head"><h2>Overview</h2><p>Here's how your events are performing.</p></div>
+        <div id="statusBanner"></div>
+        <div class="stats-grid" id="statsGrid"></div>
+        <div style="color:var(--ink-soft);font-size:12.5px;">BurchTickets commission: <strong style="color:var(--onyx);">10% per ticket</strong>, deducted automatically before payout.</div>
+      </div>
+
+      <div class="dash-panel" id="panel-events">
+        <div class="panel-head"><h2>My Events</h2><p>Add at least one ticket tier before publishing a draft.</p></div>
+        <table>
+          <thead><tr><th>Title</th><th>Venue</th><th>Status</th><th>Tickets Sold</th><th></th><th></th></tr></thead>
+          <tbody id="myEventsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="dash-panel" id="panel-create">
+        <div class="panel-head"><h2>Create Event</h2><p>Starts as a draft — add ticket tiers, then publish when ready.</p></div>
+        <form id="createEventForm" onsubmit="createEvent(event)" style="max-width:520px;">
+          <div class="form-group">
+            <label>Event flyer / cover photo</label>
+            <label class="cover-upload" id="coverUploadLabel">
+              <span id="coverUploadText">Click to upload a photo (JPG/PNG, under 2MB)</span>
+              <input type="file" id="evCoverFile" accept="image/png,image/jpeg" onchange="handleCoverUpload(event)">
+              <div id="coverPreviewWrap" class="hidden"><img id="coverPreview"></div>
+            </label>
+          </div>
+          <div class="form-group"><label>Title</label><input type="text" id="evTitle" required></div>
+          <div class="form-group"><label>Description</label><textarea id="evDesc" rows="3"></textarea></div>
+          <div class="form-group"><label>Venue name</label><input type="text" id="evVenue" required></div>
+          <div class="form-group"><label>City</label><input type="text" id="evCity" required></div>
+          <div class="form-group"><label>Start date/time</label><input type="datetime-local" id="evStart" required></div>
+          <div class="form-group"><label>End date/time</label><input type="datetime-local" id="evEnd" required></div>
+          <button type="submit" class="btn btn-primary">Create event (draft)</button>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="page" id="page-mytickets">
+  <section class="section">
+    <div class="eyebrow">Your account</div>
+    <h1 style="font-size:clamp(28px,4vw,42px);">My tickets</h1>
+    <p class="sub" id="myTicketsIntro">Log in to see your past orders and re-download any ticket.</p>
+    <div id="myTicketsRoot" style="margin-top:30px;max-width:640px;"></div>
+  </section>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="logo">Burch<em>Tickets</em></div>
+      <p>Making ticketing simple — browse, pay with M-Pesa, and get a scannable PDF ticket in seconds.</p>
+      <div class="newsletter">
+        <input type="email" placeholder="E-mail address">
+        <button onclick="showToast('Thanks — you are on the list.')">Subscribe</button>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>About Us</h4>
+      <a onclick="navigate('register')">Sell tickets</a>
+      <a onclick="showToast('Support: hello@burchtickets.com')">Customer support</a>
+      <a onclick="showToast('Terms & conditions — add your legal page URL here.')">Terms & conditions</a>
+      <a onclick="showToast('Privacy & cookie policy — add your legal page URL here.')">Privacy & cookie policy</a>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <a onclick="navigate('browse')">Browse events</a>
+      <a onclick="navigate('register')">Become an organizer</a>
+      <a href="#" onclick="return false;">Instagram</a>
+      <a href="#" onclick="return false;">Twitter / X</a>
+    </div>
+    <div class="footer-col">
+      <h4>Talk to us</h4>
+      <p>hello@burchtickets.com</p>
+      <p>WhatsApp: +254 7XX XXX XXX</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 BurchTickets. All rights reserved.</span>
+    <span>Built by Burch's Management</span>
+  </div>
+</footer>
+
+<script>
+  const API_BASE = window.BURCHTICKETS_API_BASE || "http://localhost:4000/api";
+  let authToken = null;
+  let currentCompany = null;
+  let currentEvent = null;
+  let selectedPaymentMethod = 'mpesa';
+  let buyerToken = null;
+  let currentBuyer = null;
+
+  /* =====================================================================
+     SELF-CONTAINED DEMO BACKEND
+     ---------------------------------------------------------------------
+     This site is wired to talk to a real Node/Postgres API at API_BASE
+     (see backend/). For presenting the product without standing up that
+     server, this block simulates every endpoint the frontend calls,
+     persisting to localStorage so it survives refreshes on this device/
+     browser. Point window.BURCHTICKETS_API_BASE at a real deployed
+     backend to switch this off automatically — no other code changes
+     needed, since every call still goes through api().
+  ===================================================================== */
+  const DEMO_MODE = !window.BURCHTICKETS_API_BASE;
+  if (!DEMO_MODE){
+    const banner = document.getElementById('demoBanner');
+    if (banner) banner.remove();
+  }
+  const DB_KEY = 'burchtickets_demo_db_v1';
+
+  function loadDB(){
+    try{
+      const raw = localStorage.getItem(DB_KEY);
+      if (raw) return JSON.parse(raw);
+    }catch(e){}
+    return seedDB();
+  }
+  function saveDB(db){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+  function nextId(db, kind){ db.seq[kind] = (db.seq[kind]||0) + 1; return db.seq[kind]; }
+  function slugify(s){ return s.toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') + '-' + Math.random().toString(36).slice(2,6); }
+  function simpleHash(s){ let h=0; for(let i=0;i<s.length;i++){ h=(h<<5)-h+s.charCodeAt(i); h|=0; } return String(h); }
+
+  function seedDB(){
+    const db = { companies:[], buyers:[], events:[], tiers:[], orders:[], tickets:[],
+      seq:{company:0,buyer:0,event:0,tier:0,order:0,ticket:0} };
+
+    const companyId = nextId(db,'company');
+    db.companies.push({
+      id:companyId, name:'BurchTickets Originals', email:'events@burchtickets.co.ke',
+      passwordHash:simpleHash('demo1234'), businessType:'events-organizer', mpesaPaybill:null,
+      status:'verified', createdAt:new Date().toISOString(),
+    });
+
+    const now = Date.now();
+    const day = 86400000;
+    const seedEvents = [
+      { title:'Golden Hour — Rooftop Sundowners', venueName:'The Nest Rooftop', venueCity:'Westlands, Nairobi',
+        desc:'Sundown sets, a curated bar, and the best skyline view in Westlands. Doors open 4pm, golden hour hits by 6.',
+        cover:'images/rooftop-sundowner.jpg', startIn:22, tiers:[['Early Bird',1200,60],['General',1500,150],['VIP Terrace',3500,30]] },
+      { title:'Afrobeats Night — Live Band', venueName:'K1 Klubhouse', venueCity:'Nairobi',
+        desc:'A full live band, horn section included, running through the biggest Afrobeats records of the year.',
+        cover:'images/afrobeats-night.svg', startIn:29, tiers:[['General',1800,200],['VIP Table',6000,20]] },
+      { title:'Nairobi Tech Mixer', venueName:'iHub, Senteu Plaza', venueCity:'Nairobi',
+        desc:'Founders, engineers, and investors over drinks — five-minute lightning demos start at 7pm sharp.',
+        cover:'images/tech-mixer.jpg', startIn:27, tiers:[['General',500,300]] },
+      { title:'Blankets & Bonfire Festival', venueName:'Ngong Racecourse', venueCity:'Nairobi',
+        desc:'An all-day open-air festival — live music, food trucks, and a fire pit as the sun goes down.',
+        cover:'images/blankets-bonfire.jpg', startIn:44, tiers:[['General',2000,500],['Group of 4',7000,80],['VIP',5000,60]] },
+      { title:'Nairobi Comedy Slam', venueName:'Alliance Française', venueCity:'Nairobi',
+        desc:'Six of the city\'s sharpest stand-up comics, one stage, one very unlucky front row.',
+        cover:'images/comedy-slam.jpg', startIn:35, tiers:[['General',1000,180],['Front Row',1800,40]] },
+      { title:'Mirror Ball — One Night Only', venueName:'The Alchemist', venueCity:'Nairobi',
+        desc:'Disco revival night — mirror balls, vinyl-only DJ sets, dress to shine.',
+        cover:'images/mirror-ball.jpg', startIn:15, tiers:[['General',1200,220],['VIP Booth',4500,25]] },
+    ];
+
+    seedEvents.forEach(se => {
+      const eventId = nextId(db,'event');
+      const startAt = new Date(now + se.startIn*day).toISOString();
+      const endAt = new Date(now + se.startIn*day + 5*3600000).toISOString();
+      db.events.push({
+        id:eventId, slug:slugify(se.title), title:se.title, description:se.desc,
+        venueName:se.venueName, venueCity:se.venueCity, startAt, endAt,
+        coverImageUrl:se.cover, companyId, status:'published', createdAt:new Date().toISOString(),
+      });
+      se.tiers.forEach(([name,price,qty]) => {
+        db.tiers.push({ id:nextId(db,'tier'), eventId, name, price, quantityTotal:qty,
+          quantitySold: Math.floor(qty * (0.1 + Math.random()*0.35)), maxPerOrder:10 });
+      });
+    });
+
+    saveDB(db);
+    return db;
+  }
+
+  function findCompanyByToken(token){
+    if (!token || !token.startsWith('demo-company-')) return null;
+    const id = Number(token.split('demo-company-')[1]);
+    const db = loadDB();
+    return db.companies.find(c => c.id === id) || null;
+  }
+  function findBuyerByToken(token){
+    if (!token || !token.startsWith('demo-buyer-')) return null;
+    const id = Number(token.split('demo-buyer-')[1]);
+    const db = loadDB();
+    return db.buyers.find(b => b.id === id) || null;
+  }
+
+  function publicEventView(db, ev){
+    const tiers = db.tiers.filter(t => t.eventId === ev.id);
+    const sold = tiers.reduce((s,t)=>s+t.quantitySold,0);
+    return { id:ev.id, slug:ev.slug, title:ev.title, description:ev.description,
+      venue_name:ev.venueName, venue_city:ev.venueCity, start_at:ev.startAt, end_at:ev.endAt,
+      cover_image_url:ev.coverImageUrl, status:ev.status, tickets_sold:sold };
+  }
+
+  async function demoApi(path, { method='GET', body=null, auth=false, buyerAuth=false } = {}){
+    const db = loadDB();
+    const [route, qs] = path.split('?');
+    const params = new URLSearchParams(qs || '');
+    const parts = route.split('/').filter(Boolean);
+
+    // GET /discover?city=Nairobi
+    if (route === '/discover' && method === 'GET'){
+      const events = db.events.filter(e => e.status === 'published').map(ev => ({
+        title: ev.title, startAt: ev.startAt, venue: `${ev.venueName}, ${ev.venueCity}`,
+        source:'burchtickets', sourceLabel:'BurchTickets', slug: ev.slug,
+      })).sort((a,b)=> new Date(a.startAt)-new Date(b.startAt));
+      return { ok:true, events, updatedAt:new Date().toISOString() };
+    }
+
+    // POST /auth/register
+    if (route === '/auth/register' && method === 'POST'){
+      if (!body.companyName || !body.email || !body.password) throw new Error('MISSING_FIELDS');
+      if (db.companies.some(c => c.email.toLowerCase() === body.email.toLowerCase())) throw new Error('EMAIL_ALREADY_REGISTERED');
+      const id = nextId(db,'company');
+      db.companies.push({ id, name:body.companyName, email:body.email, passwordHash:simpleHash(body.password),
+        businessType:body.businessType||'other', mpesaPaybill:body.mpesaPaybill||null, status:'pending', createdAt:new Date().toISOString() });
+      saveDB(db);
+      return { ok:true, token:`demo-company-${id}`, companyId:id, companyName:body.companyName };
+    }
+
+    // POST /auth/login
+    if (route === '/auth/login' && method === 'POST'){
+      const c = db.companies.find(c => c.email.toLowerCase() === (body.email||'').toLowerCase());
+      if (!c || c.passwordHash !== simpleHash(body.password||'')) throw new Error('INVALID_CREDENTIALS');
+      return { ok:true, token:`demo-company-${c.id}`, companyId:c.id, companyName:c.name };
+    }
+
+    // POST /buyer-auth/register
+    if (route === '/buyer-auth/register' && method === 'POST'){
+      if (!body.name || !body.email || !body.password) throw new Error('MISSING_FIELDS');
+      if (db.buyers.some(b => b.email.toLowerCase() === body.email.toLowerCase())) throw new Error('EMAIL_ALREADY_REGISTERED');
+      const id = nextId(db,'buyer');
+      db.buyers.push({ id, name:body.name, email:body.email, phone:body.phone||'', passwordHash:simpleHash(body.password) });
+      saveDB(db);
+      return { ok:true, token:`demo-buyer-${id}`, buyerId:id, name:body.name, email:body.email, phone:body.phone||'' };
+    }
+
+    // POST /buyer-auth/login
+    if (route === '/buyer-auth/login' && method === 'POST'){
+      const b = db.buyers.find(b => b.email.toLowerCase() === (body.email||'').toLowerCase());
+      if (!b || b.passwordHash !== simpleHash(body.password||'')) throw new Error('INVALID_CREDENTIALS');
+      return { ok:true, token:`demo-buyer-${b.id}`, buyerId:b.id, name:b.name, email:b.email, phone:b.phone };
+    }
+
+    // GET /buyer/orders
+    if (route === '/buyer/orders' && method === 'GET'){
+      if (!buyerAuth || !buyerToken) throw new Error('MISSING_TOKEN');
+      const buyer = findBuyerByToken(buyerToken);
+      if (!buyer) throw new Error('INVALID_TOKEN');
+      maybeSettlePayments(db);
+      const orders = db.orders.filter(o => o.buyerId === buyer.id).sort((a,b)=> new Date(b.createdAt)-new Date(a.createdAt))
+        .map(o => decorateOrder(db, o));
+      return { ok:true, orders };
+    }
+
+    // GET /dashboard/overview
+    if (route === '/dashboard/overview' && method === 'GET'){
+      if (!auth || !authToken) throw new Error('MISSING_TOKEN');
+      const company = findCompanyByToken(authToken);
+      if (!company) throw new Error('INVALID_TOKEN');
+      maybeSettlePayments(db);
+      const companyEventIds = db.events.filter(e => e.companyId === company.id).map(e=>e.id);
+      const paidOrders = db.orders.filter(o => companyEventIds.includes(o.eventId) && o.status === 'paid');
+      const grossRevenue = paidOrders.reduce((s,o)=> s + orderSubtotal(db,o), 0);
+      const commission = +(grossRevenue * 0.10).toFixed(2);
+      return { ok:true, commissionRate:10, stats:{
+        company_status: company.status, total_events: companyEventIds.length,
+        paid_orders: paidOrders.length, gross_revenue: grossRevenue, commission_paid: commission,
+      }};
+    }
+
+    // GET /events/mine
+    if (route === '/events/mine' && method === 'GET'){
+      if (!auth || !authToken) throw new Error('MISSING_TOKEN');
+      const company = findCompanyByToken(authToken);
+      if (!company) throw new Error('INVALID_TOKEN');
+      const events = db.events.filter(e => e.companyId === company.id).map(ev => {
+        const tiers = db.tiers.filter(t => t.eventId === ev.id);
+        return { id:ev.id, title:ev.title, venue_name:ev.venueName, venue_city:ev.venueCity,
+          status:ev.status, tickets_sold: tiers.reduce((s,t)=>s+t.quantitySold,0), slug:ev.slug };
+      }).sort((a,b)=> b.id-a.id);
+      return { ok:true, events };
+    }
+
+    // GET /events/:slug/public  (also used by tier manager, keyed by slug there)
+    if (parts[0]==='events' && parts.length===3 && parts[2]==='public' && method==='GET'){
+      const ev = db.events.find(e => e.slug === parts[1]);
+      if (!ev) throw new Error('EVENT_NOT_FOUND');
+      const tiers = db.tiers.filter(t => t.eventId === ev.id).map(t => ({
+        id:t.id, name:t.name, price:t.price, quantity_total:t.quantityTotal,
+        quantity_sold:t.quantitySold, max_per_order:t.maxPerOrder }));
+      return { ok:true, event: publicEventView(db, ev), tiers };
+    }
+
+    // POST /events/:eventId/tiers
+    if (parts[0]==='events' && parts.length===3 && parts[2]==='tiers' && method==='POST'){
+      if (!auth || !authToken) throw new Error('MISSING_TOKEN');
+      const company = findCompanyByToken(authToken);
+      if (!company) throw new Error('INVALID_TOKEN');
+      const eventId = Number(parts[1]);
+      const ev = db.events.find(e => e.id === eventId && e.companyId === company.id);
+      if (!ev) throw new Error('EVENT_NOT_FOUND');
+      if (!body.name || !(body.price >= 0) || !body.quantityTotal) throw new Error('INVALID_REQUEST');
+      db.tiers.push({ id:nextId(db,'tier'), eventId, name:body.name, price:Number(body.price),
+        quantityTotal:Number(body.quantityTotal), quantitySold:0, maxPerOrder:Number(body.maxPerOrder)||10 });
+      saveDB(db);
+      return { ok:true };
+    }
+
+    // POST /events
+    if (route === '/events' && method === 'POST'){
+      if (!auth || !authToken) throw new Error('MISSING_TOKEN');
+      const company = findCompanyByToken(authToken);
+      if (!company) throw new Error('INVALID_TOKEN');
+      if (!body.title || !body.venueName || !body.venueCity || !body.startAt) throw new Error('MISSING_FIELDS');
+      const id = nextId(db,'event');
+      db.events.push({ id, slug:slugify(body.title), title:body.title, description:body.description||'',
+        venueName:body.venueName, venueCity:body.venueCity, startAt:body.startAt, endAt:body.endAt||body.startAt,
+        coverImageUrl:body.coverImageBase64||null, companyId:company.id, status:'draft', createdAt:new Date().toISOString() });
+      saveDB(db);
+      return { ok:true, eventId:id };
+    }
+
+    // PATCH /events/:eventId/publish
+    if (parts[0]==='events' && parts.length===3 && parts[2]==='publish' && method==='PATCH'){
+      if (!auth || !authToken) throw new Error('MISSING_TOKEN');
+      const company = findCompanyByToken(authToken);
+      if (!company) throw new Error('INVALID_TOKEN');
+      const eventId = Number(parts[1]);
+      const ev = db.events.find(e => e.id === eventId && e.companyId === company.id);
+      if (!ev) throw new Error('EVENT_NOT_FOUND');
+      const hasTiers = db.tiers.some(t => t.eventId === eventId);
+      if (!hasTiers) throw new Error('NO_TICKET_TIERS');
+      ev.status = 'published';
+      saveDB(db);
+      return { ok:true };
+    }
+
+    // GET /events  (public list of published events)
+    if (route === '/events' && method === 'GET'){
+      const events = db.events.filter(e => e.status === 'published')
+        .sort((a,b)=> new Date(a.startAt)-new Date(b.startAt))
+        .map(ev => ({ id:ev.id, slug:ev.slug, title:ev.title, venue_name:ev.venueName,
+          venue_city:ev.venueCity, start_at:ev.startAt, cover_image_url:ev.coverImageUrl }));
+      return { ok:true, events };
+    }
+
+    // POST /checkout
+    if (route === '/checkout' && method === 'POST'){
+      const ev = db.events.find(e => e.id === body.eventId);
+      if (!ev || ev.status !== 'published') throw new Error('EVENT_NOT_AVAILABLE');
+      if (!body.items || !body.items.length) throw new Error('INVALID_REQUEST');
+      if (!body.buyerName || !body.buyerEmail || !body.buyerPhone) throw new Error('MISSING_FIELDS');
+      for (const item of body.items){
+        const tier = db.tiers.find(t => t.id === item.ticketTierId && t.eventId === ev.id);
+        if (!tier) throw new Error('TICKET_TIER_NOT_FOUND');
+        if (item.quantity > tier.maxPerOrder) throw new Error('MAX_PER_ORDER_EXCEEDED');
+        if (item.quantity > (tier.quantityTotal - tier.quantitySold)) throw new Error('INSUFFICIENT_INVENTORY');
+      }
+      const buyer = buyerAuth && buyerToken ? findBuyerByToken(buyerToken) : null;
+      const id = nextId(db,'order');
+      db.orders.push({
+        id, eventId: ev.id, companyId: ev.companyId, buyerId: buyer ? buyer.id : null,
+        buyerName: body.buyerName, buyerEmail: body.buyerEmail, buyerPhone: body.buyerPhone,
+        items: body.items, status:'pending', paymentMethod: body.paymentMethod || 'mpesa',
+        createdAt:new Date().toISOString(), settleAt: Date.now() + 4500,
+      });
+      saveDB(db);
+      return { ok:true, orderId:id };
+    }
+
+    // GET /checkout/:orderId/status
+    if (parts[0]==='checkout' && parts.length===3 && parts[2]==='status' && method==='GET'){
+      maybeSettlePayments(db);
+      const order = db.orders.find(o => o.id === Number(parts[1]));
+      if (!order) throw new Error('ORDER_NOT_FOUND');
+      const tickets = db.tickets.filter(t => t.orderId === order.id)
+        .map(t => ({ ticketCode:t.ticketCode, tierName:t.tierName }));
+      return { ok:true, order_status: order.status, tickets };
+    }
+
+    throw new Error('REQUEST_FAILED');
+  }
+
+  function orderSubtotal(db, order){
+    return order.items.reduce((sum, item) => {
+      const tier = db.tiers.find(t => t.id === item.ticketTierId);
+      return sum + (tier ? tier.price * item.quantity : 0);
+    }, 0);
+  }
+
+  function decorateOrder(db, o){
+    const ev = db.events.find(e => e.id === o.eventId);
+    const company = db.companies.find(c => c.id === o.companyId);
+    const tickets = db.tickets.filter(t => t.orderId === o.id).map(t => ({ ticketCode:t.ticketCode, tierName:t.tierName }));
+    return { eventTitle: ev ? ev.title : 'Event', venueName: ev ? ev.venueName : '', venueCity: ev ? ev.venueCity : '',
+      startAt: ev ? ev.startAt : o.createdAt, companyName: company ? company.name : 'Organizer',
+      status:o.status, tickets };
+  }
+
+  // Simulates the M-Pesa STK push confirming a few seconds after checkout —
+  // called on every status/orders/dashboard read so it settles in the
+  // background without needing a real payment webhook.
+  function maybeSettlePayments(db){
+    let changed = false;
+    db.orders.forEach(o => {
+      if (o.status === 'pending' && o.settleAt && Date.now() >= o.settleAt){
+        o.status = 'paid';
+        o.items.forEach(item => {
+          const tier = db.tiers.find(t => t.id === item.ticketTierId);
+          if (!tier) return;
+          tier.quantitySold += item.quantity;
+          for (let i=0;i<item.quantity;i++){
+            db.tickets.push({
+              id: nextId(db,'ticket'), orderId:o.id, tierId:tier.id, tierName:tier.name, eventId:o.eventId,
+              ticketCode: 'BT-' + Math.random().toString(36).slice(2,6).toUpperCase() + '-' + Math.random().toString(36).slice(2,6).toUpperCase(),
+            });
+          }
+        });
+        changed = true;
+      }
+    });
+    if (changed) saveDB(db);
+  }
+
+  // ---- Sample "Trending" showcase (illustrative only — real published events
+  // come from the live backend once it's connected; see loadPublicEvents) ----
+  const SAMPLE_EVENTS = [
+    { tag:'Rooftop',  date:{d:'25',m:'JUL'}, title:'Golden Hour — Rooftop Sundowners', venue:'The Nest Rooftop, Westlands, Nairobi', price:'1,500', cat:'rooftop', img:'images/rooftop-sundowner.jpg' },
+    { tag:'Live Music', date:{d:'01',m:'AUG'}, title:'Afrobeats Night — Live Band', venue:'K1 Klubhouse, Nairobi', price:'1,800', cat:'music', img:'images/afrobeats-night.svg' },
+    { tag:'Networking', date:{d:'30',m:'JUL'}, title:'Nairobi Tech Mixer', venue:'iHub, Senteu Plaza, Nairobi', price:'500', cat:'networking', img:'images/tech-mixer.jpg' },
+    { tag:'Faith', date:{d:'08',m:'AUG'}, title:'Praise on the Hill — Gospel Night', venue:'Ridgeways Chapel, Nairobi', price:'800', cat:'faith' },
+    { tag:'Festival', date:{d:'16',m:'AUG'}, title:'Blankets & Bonfire Festival', venue:'Ngong Racecourse, Nairobi', price:'2,000', cat:'festival', img:'images/blankets-bonfire.jpg' },
+    { tag:'Comedy', date:{d:'07',m:'AUG'}, title:'Nairobi Comedy Slam', venue:'Alliance Française, Nairobi', price:'1,000', cat:'comedy', img:'images/comedy-slam.jpg' },
+    { tag:'Nightlife', date:{d:'18',m:'JUL'}, title:'Mirror Ball — One Night Only', venue:'The Alchemist, Nairobi', price:'1,200', cat:'music', img:'images/mirror-ball.jpg' },
+  ];
+
+  function coverArt(cat){
+    const scenes = {
+      rooftop: `<defs><linearGradient id="g-${cat}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#F2B94E"/><stop offset="1" stop-color="#B9722C"/></linearGradient></defs>
+        <rect width="400" height="220" fill="url(#g-${cat})"/>
+        <circle cx="330" cy="60" r="34" fill="#FFE9B8" opacity=".8"/>
+        <g fill="#8A4E1E" opacity=".85">
+          <rect x="0" y="150" width="55" height="70"/><rect x="60" y="120" width="40" height="100"/>
+          <rect x="105" y="160" width="65" height="60"/><rect x="175" y="130" width="45" height="90"/>
+          <rect x="225" y="170" width="80" height="50"/><rect x="310" y="140" width="90" height="80"/>
+        </g>`,
+      music: `<defs><linearGradient id="g-${cat}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#4C1D95"/></linearGradient></defs>
+        <rect width="400" height="220" fill="url(#g-${cat})"/>
+        <g fill="#fff" opacity=".18"><polygon points="60,0 100,0 40,220 0,220"/>
+        <polygon points="150,0 190,0 130,220 90,220"/><polygon points="240,0 280,0 220,220 180,220"/></g>
+        <g fill="#1E1035" opacity=".9"><path d="M0,220 Q40,160 80,220 Q120,160 160,220 Q200,160 240,220 Q280,160 320,220 Q360,160 400,220 L400,220 L0,220 Z"/></g>`,
+      networking: `<defs><linearGradient id="g-${cat}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#6D9BD8"/><stop offset="1" stop-color="#2E4F82"/></linearGradient></defs>
+        <rect width="400" height="220" fill="url(#g-${cat})"/>
+        <g stroke="#fff" stroke-width="1.5" opacity=".5">
+          <line x1="40" y1="50" x2="140" y2="90"/><line x1="140" y1="90" x2="260" y2="40"/>
+          <line x1="140" y1="90" x2="120" y2="180"/><line x1="260" y1="40" x2="340" y2="110"/>
+          <line x1="260" y1="40" x2="220" y2="150"/><line x1="120" y1="180" x2="220" y2="150"/>
+          <line x1="220" y1="150" x2="340" y2="110"/><line x1="40" y1="50" x2="120" y2="180"/></g>
+        <g fill="#fff"><circle cx="40" cy="50" r="7"/><circle cx="140" cy="90" r="9"/><circle cx="260" cy="40" r="7"/>
+        <circle cx="340" cy="110" r="7"/><circle cx="120" cy="180" r="7"/><circle cx="220" cy="150" r="9"/></g>`,
+      faith: `<defs><linearGradient id="g-${cat}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#D9A85C"/><stop offset="1" stop-color="#8A5A22"/></linearGradient></defs>
+        <rect width="400" height="220" fill="url(#g-${cat})"/>
+        <g stroke="#fff" stroke-width="1" opacity=".4">
+          <line x1="200" y1="110" x2="200" y2="10"/><line x1="200" y1="110" x2="270" y2="30"/>
+          <line x1="200" y1="110" x2="320" y2="80"/><line x1="200" y1="110" x2="340" y2="150"/>
+          <line x1="200" y1="110" x2="130" y2="30"/><line x1="200" y1="110" x2="80" y2="80"/>
+          <line x1="200" y1="110" x2="60" y2="150"/></g>
+        <circle cx="200" cy="110" r="5" fill="#fff"/>`,
+      festival: `<defs><linearGradient id="g-${cat}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4E8B7A"/><stop offset="1" stop-color="#1F4A3D"/></linearGradient></defs>
+        <rect width="400" height="220" fill="url(#g-${cat})"/>
+        <g fill="#F2B94E"><path d="M200,190 C170,170 175,140 195,120 C185,145 205,150 205,130 C220,150 225,175 200,190 Z"/></g>
+        <g fill="#fff" opacity=".55"><rect x="60" y="40" width="8" height="8" transform="rotate(20 60 40)"/>
+        <rect x="120" y="70" width="7" height="7" transform="rotate(10 120 70)"/><rect x="300" y="50" width="8" height="8" transform="rotate(30 300 50)"/>
+        <rect x="340" y="100" width="7" height="7"/><rect x="90" y="150" width="7" height="7"/>
+        <rect x="270" y="150" width="8" height="8" transform="rotate(15 270 150)"/></g>`,
+      comedy: `<defs><linearGradient id="g-${cat}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#D9718A"/><stop offset="1" stop-color="#7A2E43"/></linearGradient></defs>
+        <rect width="400" height="220" fill="url(#g-${cat})"/>
+        <g stroke="#fff" stroke-width="1" opacity=".4">
+          <line x1="200" y1="115" x2="200" y2="30"/><line x1="200" y1="115" x2="270" y2="55"/>
+          <line x1="200" y1="115" x2="300" y2="115"/><line x1="200" y1="115" x2="270" y2="180"/>
+          <line x1="200" y1="115" x2="130" y2="180"/><line x1="200" y1="115" x2="100" y2="115"/>
+          <line x1="200" y1="115" x2="130" y2="55"/></g>
+        <ellipse cx="200" cy="115" rx="10" ry="14" fill="#fff" opacity=".9"/>`,
+    };
+    return `<svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${scenes[cat] || scenes.music}</svg>`;
+  }
+
+  function renderTrendingGrid(){
+    document.getElementById('trendingGrid').innerHTML = SAMPLE_EVENTS.map(ev => `
+      <div class="event-card" onclick="navigate('browse')">
+        <div class="event-cover">
+          ${ev.img ? `<img src="${ev.img}" alt="${ev.title}" loading="lazy">` : coverArt(ev.cat)}
+          <div class="event-tag">${ev.tag}</div>
+          <div class="event-date-badge"><span class="dnum">${ev.date.d}</span><span class="dmon">${ev.date.m}</span></div>
+        </div>
+        <div class="event-card-body">
+          <h3>${ev.title}</h3>
+          <div class="venue">${ev.venue}</div>
+          <div class="price-row">From <b>KES ${ev.price}</b></div>
+        </div>
+      </div>
+    `).join('');
+  }
+  renderTrendingGrid();
+
+  // ---- "What's happening in Nairobi" — live-updating floating widget ----
+  let nairobiFeedOpen = false;
+  let nairobiFeedTimer = null;
+
+  function toggleNairobiFeed(){
+    nairobiFeedOpen = !nairobiFeedOpen;
+    document.getElementById('nairobiFeedPanel').classList.toggle('hidden', !nairobiFeedOpen);
+    if (nairobiFeedOpen) loadNairobiFeed();
+  }
+
+  function timeAgo(iso){
+    if (!iso) return '';
+    const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    return `${Math.floor(mins / 60)}h ago`;
+  }
+
+  function formatEventDate(iso){
+    if (!iso) return 'Date TBA';
+    try{
+      return new Date(iso).toLocaleDateString(undefined, { day:'numeric', month:'short' });
+    }catch(e){ return ''; }
+  }
+
+  async function loadNairobiFeed(){
+    const list = document.getElementById('nairobiFeedList');
+    const updated = document.getElementById('nairobiFeedUpdated');
+    try{
+      const data = await api('/discover?city=Nairobi');
+      if (!data.events || data.events.length === 0){
+        list.innerHTML = '<div class="nairobi-feed-empty">Nothing live right now — check back soon.</div>';
+      } else {
+        list.innerHTML = data.events.slice(0, 12).map(ev => `
+          <div class="nairobi-feed-item" onclick="${ev.source === 'burchtickets' && ev.slug ? `openEvent('${ev.slug}')` : (ev.url ? `window.open('${ev.url}','_blank')` : '')}">
+            <div class="fi-title">${ev.title}</div>
+            <div class="fi-meta">
+              <span class="fi-venue">${formatEventDate(ev.startAt)}${ev.venue ? ' · ' + ev.venue : ''}</span>
+              <span class="fi-source src-${ev.source}">${ev.sourceLabel}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+      updated.textContent = `updated ${timeAgo(data.updatedAt)}`;
+    }catch(err){
+      list.innerHTML = '<div class="nairobi-feed-empty">Can\'t reach the feed right now.</div>';
+      updated.textContent = '';
+    }
+  }
+
+  // Poll every 60s regardless of open/closed state, so the badge/panel is
+  // always current the moment someone opens it.
+  nairobiFeedTimer = setInterval(loadNairobiFeed, 60000);
+  loadNairobiFeed();
+
+  function showToast(msg, isErr=false){
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.classList.toggle('err', isErr);
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 3200);
+  }
+
+  const ERROR_MESSAGES = {
+    MISSING_FIELDS: 'Fill in all the required fields.',
+    EMAIL_ALREADY_REGISTERED: 'That email is already registered — try logging in instead.',
+    INVALID_CREDENTIALS: 'Incorrect email or password.',
+    MISSING_TOKEN: 'Please log in first.',
+    INVALID_TOKEN: 'Your session expired — please log in again.',
+    EVENT_NOT_FOUND: "Couldn't find that event.",
+    NO_TICKET_TIERS: 'Add at least one ticket tier before publishing.',
+    TICKET_TIER_NOT_FOUND: 'That ticket tier is no longer available.',
+    TICKET_TIER_INACTIVE: 'That ticket tier is no longer on sale.',
+    MAX_PER_ORDER_EXCEEDED: "You can't order that many of this tier in one go.",
+    INSUFFICIENT_INVENTORY: "There aren't enough tickets left at that quantity.",
+    EVENT_NOT_AVAILABLE: "This event isn't open for sales right now.",
+    INVALID_REQUEST: 'Something in that request was missing — please check and try again.',
+    STK_PUSH_FAILED: "We couldn't reach M-Pesa just now — please try paying again.",
+    PESAPAL_ORDER_FAILED: "We couldn't start the Pesapal checkout just now — please try paying again.",
+    ORDER_NOT_FOUND: "Couldn't find that order.",
+    TICKET_NOT_FOUND: "Couldn't find that ticket.",
+    ORDER_NOT_PAID: "This order hasn't been paid for yet.",
+    IMAGE_TOO_LARGE: 'That image is too large — try a smaller photo.',
+    REQUEST_FAILED: 'Something went wrong — please try again.',
+    BAD_RESPONSE: "We didn't get a valid response from the server — please try again.",
+  };
+  // Raw browser fetch errors (not our own API error codes) — these vary by
+  // browser ("Load failed" on Safari/WebKit, "Failed to fetch" on Chrome,
+  // "NetworkError..." on Firefox) and almost always mean the API server
+  // isn't reachable at all, so show one clear message instead of the raw text.
+  const NETWORK_ERROR_PATTERNS = [/load failed/i, /failed to fetch/i, /networkerror/i, /network request failed/i];
+  function friendlyError(err){
+    const msg = err && err.message || '';
+    if (ERROR_MESSAGES[msg]) return ERROR_MESSAGES[msg];
+    if (NETWORK_ERROR_PATTERNS.some(p => p.test(msg))) {
+      return "Can't reach the ticketing server right now — it may still be starting up, or isn't deployed yet.";
+    }
+    return msg || 'Something went wrong — please try again.';
+  }
+
+  async function api(path, opts = {}){
+    if (DEMO_MODE){
+      // Small artificial delay so loading states in the UI feel real.
+      await new Promise(r => setTimeout(r, 220 + Math.random()*260));
+      return demoApi(path, opts);
+    }
+    const { method='GET', body=null, auth=false, buyerAuth=false } = opts;
+    const headers = { 'Content-Type':'application/json' };
+    if (auth && authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    if (buyerAuth && buyerToken) headers['Authorization'] = `Bearer ${buyerToken}`;
+    const res = await fetch(`${API_BASE}${path}`, {
+      method, headers, body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json().catch(()=>({ ok:false, error:'BAD_RESPONSE' }));
+    if (!res.ok || data.ok === false) throw new Error(data.error || 'REQUEST_FAILED');
+    return data;
+  }
+
+  function navigate(pageName){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(`page-${pageName}`).classList.add('active');
+    if (pageName === 'browse') loadPublicEvents();
+    if (pageName === 'dashboard') loadDashboard();
+    if (pageName === 'mytickets') loadMyTickets();
+    window.scrollTo(0,0);
+  }
+
+  function setLoggedInUI(companyName){
+    document.getElementById('navUser').classList.remove('hidden');
+    document.getElementById('navRegister').classList.add('hidden');
+    document.getElementById('navLogin').classList.add('hidden');
+    document.getElementById('navCta').textContent = 'Dashboard';
+    document.getElementById('navCta').setAttribute('onclick', "navigate('dashboard')");
+    document.getElementById('navCompanyName').textContent = companyName;
+    document.getElementById('navAvatar').textContent = companyName.charAt(0).toUpperCase();
+  }
+
+  function logout(){
+    authToken = null; currentCompany = null;
+    document.getElementById('navUser').classList.add('hidden');
+    document.getElementById('navRegister').classList.remove('hidden');
+    document.getElementById('navLogin').classList.remove('hidden');
+    document.getElementById('navCta').textContent = 'Get Started';
+    document.getElementById('navCta').setAttribute('onclick', "navigate('register')");
+    navigate('home');
+  }
+
+  async function registerCompany(e){
+    e.preventDefault();
+    try{
+      const data = await api('/auth/register', { method:'POST', body:{
+        companyName: document.getElementById('regCompany').value,
+        email: document.getElementById('regEmail').value,
+        password: document.getElementById('regPassword').value,
+        businessType: document.getElementById('regType').value,
+        mpesaPaybill: document.getElementById('regMpesa').value || null,
+      }});
+      authToken = data.token; currentCompany = { id:data.companyId, name:data.companyName };
+      setLoggedInUI(data.companyName);
+      showToast('Company registered. Welcome!');
+      navigate('dashboard');
+    }catch(err){ showToast(friendlyError(err), true); }
+  }
+
+  async function loginCompany(e){
+    e.preventDefault();
+    try{
+      const data = await api('/auth/login', { method:'POST', body:{
+        email: document.getElementById('loginEmail').value,
+        password: document.getElementById('loginPassword').value,
+      }});
+      authToken = data.token; currentCompany = { id:data.companyId, name:data.companyName };
+      setLoggedInUI(data.companyName);
+      showToast('Logged in.');
+      navigate('dashboard');
+    }catch(err){ showToast(friendlyError(err), true); }
+  }
+
+  function switchPanel(name){
+    document.querySelectorAll('.side-item').forEach(i=>i.classList.toggle('active', i.dataset.panel===name));
+    document.querySelectorAll('.dash-panel').forEach(p=>p.classList.toggle('active', p.id===`panel-${name}`));
+    if (name === 'events') loadMyEvents();
+  }
+
+  /* ---- buyer account (separate from organizer auth above) ---- */
+  function setBuyerLoggedInUI(name){
+    document.getElementById('navBuyerUser').classList.remove('hidden');
+    document.getElementById('navBuyerLogin').classList.add('hidden');
+    document.getElementById('navBuyerName').textContent = `Hi, ${name.split(' ')[0]}`;
+  }
+
+  function openBuyerAuth(mode){
+    document.getElementById('buyerAuthModal').classList.remove('hidden');
+    renderBuyerAuthForm(mode);
+  }
+
+  function closeBuyerAuth(){
+    document.getElementById('buyerAuthModal').classList.add('hidden');
+  }
+
+  function renderBuyerAuthForm(mode){
+    const modal = document.getElementById('buyerAuthModalContent');
+    if (mode === 'register'){
+      modal.innerHTML = `
+        <h2>Create your account</h2>
+        <p style="color:var(--ink-soft);font-size:13px;margin-bottom:18px;">So your tickets are always one login away.</p>
+        <div class="form-group"><label>Full name</label><input type="text" id="buyerRegName"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="buyerRegEmail"></div>
+        <div class="form-group"><label>Phone</label><input type="text" id="buyerRegPhone" placeholder="07XXXXXXXX"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="buyerRegPassword"></div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn btn-ghost" onclick="closeBuyerAuth()">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="submitBuyerRegister()">Create account</button>
+        </div>
+        <p style="margin-top:14px;font-size:12.5px;color:var(--ink-soft);">Already have an account? <a onclick="renderBuyerAuthForm('login')" style="text-decoration:underline;">Log in</a></p>
+      `;
+    } else {
+      modal.innerHTML = `
+        <h2>Log in</h2>
+        <p style="color:var(--ink-soft);font-size:13px;margin-bottom:18px;">See your past orders and download tickets again.</p>
+        <div class="form-group"><label>Email</label><input type="email" id="buyerLoginEmail"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="buyerLoginPassword"></div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn btn-ghost" onclick="closeBuyerAuth()">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="submitBuyerLogin()">Log in</button>
+        </div>
+        <p style="margin-top:14px;font-size:12.5px;color:var(--ink-soft);">New here? <a onclick="renderBuyerAuthForm('register')" style="text-decoration:underline;">Create an account</a></p>
+      `;
+    }
+  }
+
+  async function submitBuyerRegister(){
+    try{
+      const data = await api('/buyer-auth/register', { method:'POST', body:{
+        name: document.getElementById('buyerRegName').value,
+        email: document.getElementById('buyerRegEmail').value,
+        phone: document.getElementById('buyerRegPhone').value,
+        password: document.getElementById('buyerRegPassword').value,
+      }});
+      buyerToken = data.token; currentBuyer = { id:data.buyerId, name:data.name, email:data.email, phone:data.phone };
+      setBuyerLoggedInUI(data.name);
+      closeBuyerAuth();
+      showToast('Account created. Welcome!');
+    }catch(err){ showToast(friendlyError(err), true); }
+  }
+
+  async function submitBuyerLogin(){
+    try{
+      const data = await api('/buyer-auth/login', { method:'POST', body:{
+        email: document.getElementById('buyerLoginEmail').value,
+        password: document.getElementById('buyerLoginPassword').value,
+      }});
+      buyerToken = data.token; currentBuyer = { id:data.buyerId, name:data.name, email:data.email, phone:data.phone };
+      setBuyerLoggedInUI(data.name);
+      closeBuyerAuth();
+      showToast('Logged in.');
+      if (document.getElementById('page-mytickets').classList.contains('active')) loadMyTickets();
+    }catch(err){ showToast(friendlyError(err), true); }
+  }
+
+  function logoutBuyer(){
+    buyerToken = null; currentBuyer = null;
+    document.getElementById('navBuyerUser').classList.add('hidden');
+    document.getElementById('navBuyerLogin').classList.remove('hidden');
+    if (document.getElementById('page-mytickets').classList.contains('active')) navigate('home');
+  }
+
+  function openMyTickets(){
+    navigate('mytickets');
+  }
+
+  async function loadMyTickets(){
+    const root = document.getElementById('myTicketsRoot');
+    if (!buyerToken){
+      document.getElementById('myTicketsIntro').textContent = 'Log in to see your past orders and re-download any ticket.';
+      root.innerHTML = `<button class="btn btn-primary" onclick="openBuyerAuth('login')">Log in</button>`;
+      return;
+    }
+    document.getElementById('myTicketsIntro').textContent = `Signed in as ${currentBuyer?.email || ''}.`;
+    root.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;">Loading your orders…</p>`;
+    try{
+      const data = await api('/buyer/orders', { buyerAuth:true });
+      if (data.orders.length === 0){
+        root.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;">No orders yet — once you buy a ticket, it'll show up here.</p>`;
+        return;
+      }
+      root.innerHTML = data.orders.map(o => `
+        <div class="order-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;">
+            <div>
+              <div style="font-family:var(--display);font-style:italic;font-size:18px;">${o.eventTitle}</div>
+              <div style="color:var(--ink-soft);font-size:12.5px;margin-top:4px;">${o.venueName}, ${o.venueCity} · ${new Date(o.startAt).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})}</div>
+              <div style="color:var(--ink-soft);font-size:12px;margin-top:2px;">Sold by ${o.companyName}</div>
+            </div>
+            <span class="badge ${o.status}">${o.status}</span>
+          </div>
+          ${o.tickets.length ? `
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
+              ${o.tickets.map(t => {
+                registerTicketMeta(t.ticketCode, { eventTitle:o.eventTitle, venueName:o.venueName, venueCity:o.venueCity, startAt:o.startAt, tierName:t.tierName, buyerName: currentBuyer?.name || '' });
+                return `
+                <div class="ticket-download">
+                  <div><div class="tname">${t.tierName}</div><div class="tcode">${t.ticketCode}</div></div>
+                  <a class="btn btn-primary" style="padding:9px 16px;font-size:11px;" onclick="downloadTicketPdf('${t.ticketCode}')">Download PDF</a>
+                </div>
+              `;}).join('')}
+            </div>
+          ` : `<p style="color:var(--ink-soft);font-size:12.5px;margin-top:10px;">${o.status === 'pending' ? 'Payment still processing — refresh in a moment.' : 'No tickets issued for this order.'}</p>`}
+        </div>
+      `).join('');
+    }catch(err){ root.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;">${friendlyError(err)}</p>`; }
+  }
+
+  async function loadDashboard(){
+    if (!authToken) { showToast('Please log in first.', true); navigate('login'); return; }
+    try{
+      const data = await api('/dashboard/overview', { auth:true });
+      const s = data.stats;
+      const verified = s.company_status === 'verified';
+      document.getElementById('statusBanner').innerHTML = `
+        <div class="status-banner ${verified ? 'verified' : 'pending'}">
+          <div class="status-dot"></div>
+          <div>
+            <div class="status-title">${verified ? 'Account verified' : 'Verification pending'}</div>
+            <div class="status-sub">${verified
+              ? 'Your payouts release automatically after each sale.'
+              : `You can create and publish events right now. Payouts are held until our team verifies your business — usually within 24 hours.`}</div>
+          </div>
+        </div>
+      `;
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card"><div class="stat-label">Total Events</div><div class="stat-value">${s.total_events}</div></div>
+        <div class="stat-card"><div class="stat-label">Paid Orders</div><div class="stat-value">${s.paid_orders}</div></div>
+        <div class="stat-card"><div class="stat-label">Gross Revenue</div><div class="stat-value">KES ${Number(s.gross_revenue).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">Commission Paid (${data.commissionRate}%)</div><div class="stat-value">KES ${Number(s.commission_paid).toLocaleString()}</div></div>
+      `;
+    }catch(err){ showToast(friendlyError(err), true); }
+  }
+
+  async function loadMyEvents(){
+    try{
+      const data = await api('/events/mine', { auth:true });
+      window.__myEvents = data.events;
+      document.getElementById('myEventsBody').innerHTML = data.events.map(ev => `
+        <tr>
+          <td>${ev.title}</td>
+          <td>${ev.venue_name}, ${ev.venue_city}</td>
+          <td><span class="badge ${ev.status}">${ev.status}</span></td>
+          <td>${ev.tickets_sold}</td>
+          <td><a class="btn btn-ghost" style="padding:6px 14px;font-size:11px;" onclick="openTierManager(${ev.id})">Manage tickets</a></td>
+          <td>${ev.status==='draft' ? `<a class="btn btn-ghost" style="padding:6px 14px;font-size:11px;" onclick="publishEvent(${ev.id})">Publish</a>` : ''}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="6" style="color:var(--ink-soft);">No events yet — create one to get started.</td></tr>';
+    }catch(err){ showToast(friendlyError(err), true); }
+  }
+
+  /* ---- ticket tier manager ---- */
+  async function openTierManager(eventId){
+    const ev = (window.__myEvents || []).find(e => e.id === eventId);
+    if (!ev) return showToast("Couldn't find that event.", true);
+    document.getElementById('tierModal').classList.remove('hidden');
+    await renderTierManager(ev);
+  }
+
+  function closeTierManager(){
+    document.getElementById('tierModal').classList.add('hidden');
+  }
+
+  async function renderTierManager(ev){
+    const modal = document.getElementById('tierModalContent');
+    modal.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;">Loading ticket tiers…</p>`;
+    try{
+      const data = await api(`/events/${ev.slug}/public`);
+      modal.innerHTML = `
+        <h2>${ev.title}</h2>
+        <p style="color:var(--ink-soft);font-size:13px;margin-bottom:18px;">Ticket tiers for this event.</p>
+        <div id="tierList">
+          ${data.tiers.length ? data.tiers.map(t => `
+            <div class="tier-list-row">
+              <div>
+                <div class="tln">${t.name}</div>
+                <div class="tlm">KES ${t.price} · ${t.quantity_total - t.quantity_sold} of ${t.quantity_total} left</div>
+              </div>
+            </div>
+          `).join('') : '<p style="color:var(--ink-soft);font-size:13px;">No ticket tiers yet — add one below.</p>'}
+        </div>
+        <hr style="margin:20px 0;border:none;border-top:1px solid var(--line);">
+        <div class="form-group"><label>Tier name</label><input type="text" id="tierName" placeholder="e.g. General, VIP"></div>
+        <div class="form-row-2">
+          <div class="form-group"><label>Price (KES)</label><input type="number" min="0" id="tierPrice"></div>
+          <div class="form-group"><label>Quantity available</label><input type="number" min="1" id="tierQty"></div>
+        </div>
+        <div class="form-group"><label>Max per order</label><input type="number" min="1" id="tierMax" value="10"></div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn btn-ghost" onclick="closeTierManager()">Close</button>
+          <button type="button" class="btn btn-primary" onclick="submitTier(${ev.id})">Add tier</button>
+        </div>
+      `;
+    }catch(err){ modal.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;">${friendlyError(err)}</p><button type="button" class="btn btn-ghost" onclick="closeTierManager()">Close</button>`; }
+  }
+
+  async function submitTier(eventId){
+    const name = document.getElementById('tierName').value.trim();
+    const price = Number(document.getElementById('tierPrice').value);
+    const quantityTotal = Number(document.getElementById('tierQty').value);
+    const maxPerOrder = Number(document.getElementById('tierMax').value) || 10;
+    if (!name || !(price >= 0) || !quantityTotal){
+      return showToast('Fill in tier name, price, and quantity.', true);
+    }
+    try{
+      await api(`/events/${eventId}/tiers`, { method:'POST', auth:true, body:{ name, price, quantityTotal, maxPerOrder } });
+      showToast('Ticket tier added.');
+      const ev = (window.__myEvents || []).find(e => e.id === eventId);
+      if (ev) await renderTierManager(ev);
+    }catch(err){ showToast(friendlyError(err), true); }
+  }
+
+  let pendingCoverBase64 = null;
+
+  function handleCoverUpload(e){
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024){
+      showToast('Image is over 2MB — please pick a smaller file.', true);
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      pendingCoverBase64 = reader.result; // data URL, e.g. data:image/jpeg;base64,...
+      document.getElementById('coverPreview').src = pendingCoverBase64;
+      document.getElementById('coverPreviewWrap').classList.remove('hidden');
+      document.getElementById('coverUploadText').textContent = file.name;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function createEvent(e){
+    e.preventDefault();
+    try{
+      await api('/events', { method:'POST', auth:true, body:{
+        title: document.getElementById('evTitle').value,
+        description: document.getElementById('evDesc').value,
+        venueName: document.getElementById('evVenue').value,
+        venueCity: document.getElementById('evCity').value,
+        startAt: document.getElementById('evStart').value,
+        endAt: document.getElementById('evEnd').value,
+        coverImageBase64: pendingCoverBase64,
+      }});
+      showToast('Event created as draft. Add ticket tiers, then publish.');
+      pendingCoverBase64 = null;
+      switchPanel('events');
+    }catch(err){ showToast(friendlyError(err), true); }
+  }
+
+  async function publishEvent(eventId){
+    try{
+      await api(`/events/${eventId}/publish`, { method:'PATCH', auth:true });
+      showToast('Event published.');
+      loadMyEvents();
+    }catch(err){ showToast(friendlyError(err), true); }
+  }
+
+  async function loadPublicEvents(){
+    try{
+      const data = await api('/events');
+      document.getElementById('publicEventGrid').innerHTML = data.events.map(ev => {
+        const dt = new Date(ev.start_at);
+        const dnum = dt.toLocaleDateString('en-KE', { day:'2-digit' });
+        const dmon = dt.toLocaleDateString('en-KE', { month:'short' }).toUpperCase();
+        const cover = ev.cover_image_url
+          ? `<img src="${ev.cover_image_url}" alt="">`
+          : coverArt('music');
+        return `
+        <div class="event-card" onclick="openEvent('${ev.slug}')">
+          <div class="event-cover">
+            ${cover}
+            <div class="event-date-badge"><span class="dnum">${dnum}</span><span class="dmon">${dmon}</span></div>
+          </div>
+          <div class="event-card-body">
+            <h3>${ev.title}</h3>
+            <div class="venue">${ev.venue_name}, ${ev.venue_city}</div>
+          </div>
+        </div>`;
+      }).join('') || '<p style="color:var(--ink-soft);">No published events yet — once your backend is connected and an organizer publishes an event, it shows up here automatically.</p>';
+    }catch(err){
+      document.getElementById('publicEventGrid').innerHTML =
+        `<p style="color:var(--ink-soft);">${friendlyError(err)} <a onclick="loadPublicEvents()" style="color:var(--onyx);text-decoration:underline;cursor:pointer;">Retry</a></p>`;
+    }
+  }
+
+  async function openEvent(slug){
+    try{
+      const data = await api(`/events/${slug}/public`);
+      currentEvent = data;
+      document.getElementById('eventDetailRoot').innerHTML = `
+        ${data.event.cover_image_url ? `<div style="border-radius:16px;overflow:hidden;margin-bottom:24px;max-width:640px;"><img src="${data.event.cover_image_url}" style="width:100%;display:block;" alt=""></div>` : ''}
+        <div class="eyebrow">${data.event.venue_name}, ${data.event.venue_city}</div>
+        <h1 style="font-size:clamp(30px,4vw,46px);">${data.event.title}</h1>
+        <p class="sub">${data.event.description || ''}</p>
+
+        <div class="stepper">
+          <div class="step active" id="stepDot-1"><div class="step-dot">1</div><span class="step-label">Tickets</span></div>
+          <div class="step-line"></div>
+          <div class="step" id="stepDot-2"><div class="step-dot">2</div><span class="step-label">Details</span></div>
+          <div class="step-line"></div>
+          <div class="step" id="stepDot-3"><div class="step-dot">3</div><span class="step-label">Pay</span></div>
+          <div class="step-line"></div>
+          <div class="step" id="stepDot-4"><div class="step-dot">4</div><span class="step-label">Ticket</span></div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab active" id="tab-tickets" onclick="switchTab('tickets')">Tickets</div>
+          <div class="tab" id="tab-about" onclick="switchTab('about')">About</div>
+        </div>
+
+        <div class="checkout-view active" id="checkoutStep1" style="max-width:520px;">
+          <div id="ticketsPane">
+            ${data.tiers.map(t => `
+              <div class="tier-row">
+                <div class="tier-top">
+                  <div>
+                    <div class="tier-name">${t.name}</div>
+                    <div class="tier-price">KES ${t.price}</div>
+                  </div>
+                  <div class="qty-controls">
+                    <button type="button" class="qty-btn" onclick="stepQty(${t.id},-1,${t.max_per_order},${t.quantity_total - t.quantity_sold})">−</button>
+                    <span class="qty-value" id="qty-${t.id}">0</span>
+                    <button type="button" class="qty-btn" onclick="stepQty(${t.id},1,${t.max_per_order},${t.quantity_total - t.quantity_sold})">+</button>
+                  </div>
+                </div>
+                <div class="tier-valid">${t.quantity_total - t.quantity_sold} left · Valid ${new Date(data.event.start_at).toLocaleDateString('en-KE',{weekday:'short',month:'short',day:'numeric'})}</div>
+              </div>
+            `).join('')}
+          </div>
+          <div id="aboutPane" class="hidden">
+            <p class="sub" style="max-width:none;">${data.event.description || 'No further details provided by the organizer.'}</p>
+          </div>
+          <div class="subtotal-bar">
+            <span class="lbl">Subtotal</span>
+            <span id="liveSubtotal">KES 0</span>
+          </div>
+          <div class="buy-row">
+            <button class="btn btn-ghost" onclick="proceedToDetails()">Add to cart</button>
+            <button class="btn btn-primary" onclick="proceedToDetails()">Quick buy</button>
+          </div>
+        </div>
+
+        <div class="checkout-view" id="checkoutStep2" style="max-width:420px;">
+          <div class="form-card" style="margin:0;">
+            <h2 style="font-size:20px;">Your details</h2>
+            <div class="form-group"><label>Full name</label><input type="text" id="buyerName"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="buyerEmail"></div>
+            <div class="form-group"><label>M-Pesa phone (07XXXXXXXX)</label><input type="text" id="buyerPhone"></div>
+            <div style="display:flex;gap:10px;">
+              <button class="btn btn-ghost" onclick="goToStep(1)">Back</button>
+              <button class="btn btn-primary" onclick="reviewOrder()">Review order</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkout-view" id="checkoutStep3" style="max-width:420px;">
+          <div class="form-card" style="margin:0;">
+            <h2 style="font-size:20px;">Confirm & pay</h2>
+            <div class="pay-method-row" style="display:flex;gap:8px;margin:12px 0 16px;">
+              <button type="button" class="pay-method-btn active" id="payMethodMpesa" onclick="selectPaymentMethod('mpesa')">M-Pesa</button>
+              <button type="button" class="pay-method-btn" id="payMethodPesapal" onclick="selectPaymentMethod('pesapal')">Card / Mobile Money</button>
+            </div>
+            <p class="sub2" id="payMethodHint">Demo mode: this simulates an M-Pesa STK push and confirms automatically in a few seconds — no real charge is made.</p>
+            <div class="order-summary" id="orderSummary"></div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+              <button class="btn btn-ghost" onclick="goToStep(2)">Back</button>
+              <button class="btn btn-primary" id="payBtn" onclick="startCheckout(${data.event.id})">Pay with M-Pesa</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkout-view" id="checkoutStep4" style="max-width:460px;">
+          <div class="form-card" style="margin:0;">
+            <h2 style="font-size:20px;">Your ticket</h2>
+            <p class="sub2" id="ticketStatusMsg">Waiting for M-Pesa confirmation…</p>
+            <div id="ticketWaiting" style="display:flex;align-items:center;gap:12px;padding:14px 0;">
+              <div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--champagne);animation:spin .8s linear infinite;"></div>
+              <span style="font-size:13px;color:var(--ink-soft);">Complete the payment prompt on your phone.</span>
+            </div>
+            <div id="ticketList" style="display:none;"></div>
+          </div>
+        </div>
+      `;
+      navigate('event');
+    }catch(err){ showToast(friendlyError(err), true); }
+  }
+
+  function stepQty(tierId, delta, max, available){
+    const el = document.getElementById(`qty-${tierId}`);
+    const cap = Math.min(max, available);
+    let val = Number(el.textContent) + delta;
+    val = Math.max(0, Math.min(cap, val));
+    el.textContent = val;
+    refreshSubtotal();
+  }
+
+  function refreshSubtotal(){
+    const total = getSelectedItems().reduce((sum, i) => sum + Number(i.tier.price) * i.quantity, 0);
+    const el = document.getElementById('liveSubtotal');
+    if (el) el.textContent = `KES ${total.toLocaleString()}`;
+  }
+
+  function switchTab(name){
+    document.getElementById('tab-tickets').classList.toggle('active', name === 'tickets');
+    document.getElementById('tab-about').classList.toggle('active', name === 'about');
+    document.getElementById('ticketsPane').classList.toggle('hidden', name !== 'tickets');
+    document.getElementById('aboutPane').classList.toggle('hidden', name !== 'about');
+  }
+
+  function proceedToDetails(){
+    if (getSelectedItems().length === 0) return showToast('Select at least one ticket.', true);
+    goToStep(2);
+  }
+
+  function goToStep(n){
+    document.querySelectorAll('.checkout-view').forEach(v=>v.classList.remove('active'));
+    document.getElementById(`checkoutStep${n}`).classList.add('active');
+    [1,2,3,4].forEach(i=>{
+      const dot = document.getElementById(`stepDot-${i}`);
+      dot.classList.toggle('active', i===n);
+      dot.classList.toggle('done', i<n);
+    });
+    if (n === 2 && currentBuyer){
+      const nameEl = document.getElementById('buyerName');
+      const emailEl = document.getElementById('buyerEmail');
+      const phoneEl = document.getElementById('buyerPhone');
+      if (nameEl && !nameEl.value) nameEl.value = currentBuyer.name || '';
+      if (emailEl && !emailEl.value) emailEl.value = currentBuyer.email || '';
+      if (phoneEl && !phoneEl.value) phoneEl.value = currentBuyer.phone || '';
+    }
+  }
+
+  function getSelectedItems(){
+    return currentEvent.tiers
+      .map(t => ({ tier:t, quantity: Number(document.getElementById(`qty-${t.id}`)?.textContent || 0) }))
+      .filter(i => i.quantity > 0);
+  }
+
+  function reviewOrder(){
+    const items = getSelectedItems();
+    if (items.length === 0) return showToast('Select at least one ticket.', true);
+    if (!document.getElementById('buyerName').value || !document.getElementById('buyerEmail').value || !document.getElementById('buyerPhone').value){
+      return showToast('Fill in your name, email, and phone.', true);
+    }
+    const subtotal = items.reduce((sum,i)=>sum + i.tier.price * i.quantity, 0);
+    const commission = +(subtotal * 0.10).toFixed(2);
+    const total = subtotal + commission;
+    document.getElementById('orderSummary').innerHTML = `
+      ${items.map(i => `<div class="row"><span>${i.tier.name} × ${i.quantity}</span><span>KES ${i.tier.price * i.quantity}</span></div>`).join('')}
+      <div class="row"><span>Service fee</span><span>KES ${commission}</span></div>
+      <div class="row total"><span>Total</span><span>KES ${total.toFixed(2)}</span></div>
+    `;
+    goToStep(3);
+  }
+
+  function selectPaymentMethod(method){
+    selectedPaymentMethod = method;
+    document.getElementById('payMethodMpesa').classList.toggle('active', method === 'mpesa');
+    document.getElementById('payMethodPesapal').classList.toggle('active', method === 'pesapal');
+    document.getElementById('payMethodHint').textContent = method === 'mpesa'
+      ? 'Demo mode: this simulates an M-Pesa STK push and confirms automatically in a few seconds — no real charge is made.'
+      : 'Demo mode: this simulates a card/mobile money confirmation — no real charge is made.';
+    document.getElementById('payBtn').textContent = method === 'mpesa' ? 'Pay with M-Pesa' : 'Pay with Card / Mobile Money';
+  }
+
+  async function startCheckout(eventId){
+    const items = getSelectedItems().map(i => ({ ticketTierId: i.tier.id, quantity: i.quantity }));
+    const payBtn = document.getElementById('payBtn');
+    const isPesapal = selectedPaymentMethod === 'pesapal';
+    payBtn.disabled = true;
+    payBtn.textContent = isPesapal ? 'Redirecting to Pesapal…' : 'Sending STK Push…';
+    try{
+      const data = await api('/checkout', { method:'POST', buyerAuth:true, body:{
+        eventId,
+        buyerName: document.getElementById('buyerName').value,
+        buyerEmail: document.getElementById('buyerEmail').value,
+        buyerPhone: document.getElementById('buyerPhone').value,
+        items,
+        paymentMethod: selectedPaymentMethod,
+      }});
+
+      if (isPesapal && !DEMO_MODE){
+        if (data.payment?.redirectUrl){
+          sessionStorage.setItem('burchtickets_pending_order', String(data.orderId));
+          window.location.href = data.payment.redirectUrl; // hands off to Pesapal's hosted page
+          return;
+        }
+        throw new Error(data.paymentError || 'PESAPAL_ORDER_FAILED');
+      }
+
+      showToast(isPesapal ? 'Confirming payment…' : 'STK Push sent — check your phone to complete payment.');
+      goToStep(4);
+      document.getElementById('ticketStatusMsg').textContent = isPesapal ? 'Confirming your payment…' : 'Waiting for M-Pesa confirmation…';
+      pollOrderStatus(data.orderId);
+    }catch(err){
+      showToast(friendlyError(err), true);
+      payBtn.disabled = false;
+      payBtn.textContent = isPesapal ? 'Pay with Card / Mobile Money' : 'Pay with M-Pesa';
+    }
+  }
+
+  async function pollOrderStatus(orderId, attempt = 0){
+    try{
+      const data = await api(`/checkout/${orderId}/status`);
+      if (data.order_status === 'paid' && data.tickets?.length){
+        renderTickets(data.tickets);
+        return;
+      }
+      if (data.order_status === 'failed' || data.order_status === 'expired' || data.order_status === 'cancelled'){
+        document.getElementById('ticketStatusMsg').textContent = 'Payment was not completed.';
+        document.getElementById('ticketWaiting').innerHTML = `<span style="font-size:13px;color:var(--err);">The M-Pesa request wasn't confirmed. Go back and try again.</span>`;
+        return;
+      }
+      if (attempt > 40){ // ~2 minutes at 3s intervals
+        document.getElementById('ticketStatusMsg').textContent = 'Still waiting…';
+        document.getElementById('ticketWaiting').innerHTML = `<span style="font-size:13px;color:var(--ink-soft);">This is taking longer than usual. Check your phone, or refresh in a moment.</span>`;
+        return;
+      }
+      setTimeout(() => pollOrderStatus(orderId, attempt + 1), 3000);
+    }catch(err){
+      setTimeout(() => pollOrderStatus(orderId, attempt + 1), 3000);
+    }
+  }
+
+  /* ---- client-side PDF ticket generation (replaces the backend's
+     /tickets/:code/pdf endpoint, which doesn't exist in demo mode) ---- */
+  function registerTicketMeta(code, meta){
+    window.__ticketMeta = window.__ticketMeta || {};
+    window.__ticketMeta[code] = meta;
+  }
+
+  async function qrDataUrl(text){
+    try{
+      const res = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent(text)}`);
+      const blob = await res.blob();
+      return await new Promise((resolve,reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }catch(e){ return null; }
+  }
+
+  async function downloadTicketPdf(code){
+    if (!DEMO_MODE){
+      // Real backend generates this PDF server-side (ticketPdf.js) with the
+      // same QR code it emails to the buyer — just open it directly.
+      window.open(`${API_BASE}/tickets/${code}/pdf`, '_blank');
+      return;
+    }
+    const meta = (window.__ticketMeta || {})[code];
+    if (!meta) return showToast("Couldn't find that ticket.", true);
+    if (!window.jspdf){ return showToast('PDF library failed to load — check your connection.', true); }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'pt', format:[560, 260] });
+
+    doc.setFillColor(20,22,26);
+    doc.rect(0,0,560,260,'F');
+    doc.setFillColor(244,213,62);
+    doc.circle(36,34,4,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('times','italic');
+    doc.setFontSize(19);
+    doc.text('BurchTickets', 48, 40);
+
+    doc.setDrawColor(70,72,78);
+    doc.setLineDashPattern([3,3], 0);
+    doc.line(370,20,370,240);
+    doc.setLineDashPattern([], 0);
+
+    doc.setFont('times','italic');
+    doc.setFontSize(22);
+    const titleLines = doc.splitTextToSize(meta.eventTitle || 'Event', 300);
+    doc.text(titleLines, 32, 92);
+
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(11);
+    doc.setTextColor(200,202,208);
+    let y = 92 + titleLines.length*22 + 14;
+    doc.text(`${meta.venueName || ''}${meta.venueCity ? ', ' + meta.venueCity : ''}`, 32, y); y += 16;
+    doc.text(meta.startAt ? new Date(meta.startAt).toLocaleString('en-KE',{ weekday:'long', day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : 'Date TBA', 32, y); y += 24;
+
+    doc.setTextColor(244,213,62);
+    doc.setFontSize(12);
+    doc.text((meta.tierName || 'Ticket').toUpperCase(), 32, y); y += 4;
+
+    doc.setDrawColor(90,92,98);
+    doc.line(32, y+8, 340, y+8);
+
+    doc.setTextColor(200,202,208);
+    doc.setFontSize(10);
+    doc.text('TICKET HOLDER', 32, y+28);
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(12);
+    doc.text(meta.buyerName || 'Guest', 32, y+44);
+
+    doc.setTextColor(200,202,208);
+    doc.setFontSize(10);
+    doc.text('CODE', 200, y+28);
+    doc.setFont('courier','normal');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(12);
+    doc.text(code, 200, y+44);
+
+    const qr = await qrDataUrl(code);
+    if (qr){
+      doc.addImage(qr, 'PNG', 415, 55, 110, 110);
+    } else {
+      doc.setDrawColor(120,122,128);
+      doc.rect(415,55,110,110);
+      doc.setFontSize(8);
+      doc.setTextColor(150,152,158);
+      doc.text('QR unavailable', 425, 115);
+    }
+    doc.setFont('courier','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(200,202,208);
+    doc.text(code, 470, 180, { align:'center' });
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    doc.text('Present this at the door', 470, 196, { align:'center' });
+
+    doc.save(`BurchTickets-${code}.pdf`);
+  }
+
+  function renderTickets(tickets){
+    document.getElementById('ticketStatusMsg').textContent = 'Payment confirmed — your ticket is ready.';
+    document.getElementById('ticketWaiting').style.display = 'none';
+    const list = document.getElementById('ticketList');
+    list.style.display = 'block';
+    list.innerHTML = tickets.map(t => {
+      registerTicketMeta(t.ticketCode, {
+        eventTitle: currentEvent?.event?.title, venueName: currentEvent?.event?.venue_name,
+        venueCity: currentEvent?.event?.venue_city, startAt: currentEvent?.event?.start_at,
+        tierName: t.tierName, buyerName: document.getElementById('buyerName')?.value || '',
+      });
+      return `
+      <div class="ticket-download">
+        <div>
+          <div class="tname">${t.tierName}</div>
+          <div class="tcode">${t.ticketCode}</div>
+        </div>
+        <a class="btn btn-primary" style="padding:9px 16px;font-size:11px;" onclick="downloadTicketPdf('${t.ticketCode}')">Download PDF</a>
+      </div>
+    `;}).join('') + `<p style="font-size:12px;color:var(--ink-soft);margin-top:14px;">Emailed to you as a PDF, too — just in case. (In this demo, use the button above.)</p>`;
+  }
+
+  // Pesapal redirects the buyer's browser back here after they pay on its
+  // hosted page (see PESAPAL_CALLBACK_URL). We land fresh on index.html
+  // with ?pesapal-return=1&orderId=N, so rebuild a minimal step-4-style
+  // "verifying payment" view and resume polling from there.
+  function checkPesapalReturn(){
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('pesapal-return') !== '1') return;
+    const orderId = params.get('orderId') || sessionStorage.getItem('burchtickets_pending_order');
+    if (!orderId) return;
+
+    document.getElementById('page-event').innerHTML = `
+      <div class="form-card" style="max-width:460px;margin:60px auto 0;">
+        <h2 style="font-size:20px;">Your ticket</h2>
+        <p class="sub2" id="ticketStatusMsg">Confirming your Pesapal payment…</p>
+        <div id="ticketWaiting" style="display:flex;align-items:center;gap:12px;padding:14px 0;">
+          <div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--champagne);animation:spin .8s linear infinite;"></div>
+          <span style="font-size:13px;color:var(--ink-soft);">This usually takes a few seconds.</span>
+        </div>
+        <div id="ticketList" style="display:none;"></div>
+        <a href="${window.location.pathname}" class="btn btn-ghost" style="margin-top:16px;display:inline-block;">Back to BurchTickets</a>
+      </div>
+    `;
+    navigate('event');
+    sessionStorage.removeItem('burchtickets_pending_order');
+    pollOrderStatus(orderId);
+  }
+  checkPesapalReturn();
+</script>
+</body>
+</html>
