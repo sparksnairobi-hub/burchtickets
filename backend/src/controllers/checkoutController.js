@@ -3,6 +3,18 @@ const { sendMpesaStkPush } = require("../services/mpesaService");
 const { submitOrderRequest } = require("../services/pesapalService");
 
 async function checkout(req, res) {
+  const idempotencyKey = req.headers['idempotency-key'] || req.headers['idempotency_key'];
+
+  // if idempotency key present, return previously stored response
+  if (idempotencyKey){
+    try{
+      const r = await pool.query('SELECT response_json FROM idempotency_keys WHERE key=$1', [idempotencyKey]);
+      if (r.rowCount){
+        return res.json(r.rows[0].response_json);
+      }
+    }catch(e){ console.warn('idempotency lookup failed', e.message || e); }
+  }
+
   const client = await pool.connect();
   try {
     const { eventId, buyerName, buyerEmail, buyerPhone, items } = req.body;
@@ -74,10 +86,11 @@ async function checkout(req, res) {
     const orderId = orderRes.rows[0].id;
 
     for (const item of validatedItems) {
-      await client.query(
-        `INSERT INTO order_items (order_id, ticket_tier_id, quantity, unit_price, line_total) VALUES ($1,$2,$3,$4,$5)`,
+      const oi = await client.query(
+        `INSERT INTO order_items (order_id, ticket_tier_id, quantity, unit_price, line_total) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
         [orderId, item.ticketTierId, item.quantity, item.unitPrice, item.lineTotal]
       );
+      const orderItemId = oi.rows[0].id;
       await client.query(
         `INSERT INTO inventory_holds (event_id, ticket_tier_id, order_id, hold_key, quantity, expires_at)
          VALUES ($1,$2,$3,$4,$5, NOW() + INTERVAL '15 minutes')`,
@@ -138,7 +151,7 @@ async function checkout(req, res) {
         `UPDATE payments SET status='failed', failed_at=NOW(), updated_at=NOW() WHERE id=$1`,
         [paymentId]
       );
-      return res.status(201).json({
+      const resp = {
         ok: true,
         orderId,
         paymentId,
@@ -146,10 +159,17 @@ async function checkout(req, res) {
         currency: event.currency,
         payment: null,
         paymentError: paymentMethod === "pesapal" ? "PESAPAL_ORDER_FAILED" : "STK_PUSH_FAILED",
-      });
+      };
+
+      // persist idempotency response if key present
+      if (idempotencyKey){
+        try{ await pool.query('INSERT INTO idempotency_keys (key, order_id, response_json) VALUES ($1,$2,$3)', [idempotencyKey, orderId, resp]); }catch(e){ console.warn('save idempotency failed', e.message||e); }
+      }
+
+      return res.status(201).json(resp);
     }
 
-    return res.status(201).json({
+    const finalResp = {
       ok: true,
       orderId,
       paymentId,
@@ -157,9 +177,16 @@ async function checkout(req, res) {
       currency: event.currency,
       paymentMethod,
       payment: paymentInit,
-    });
+    };
+
+    if (idempotencyKey){
+      try{ await pool.query('INSERT INTO idempotency_keys (key, order_id, response_json) VALUES ($1,$2,$3)', [idempotencyKey, orderId, finalResp]); }catch(e){ console.warn('save idempotency failed', e.message||e); }
+    }
+
+    return res.status(201).json(finalResp);
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});
+    console.error('checkout error', err);
     return res.status(500).json({ ok: false, error: "CHECKOUT_FAILED" });
   } finally {
     client.release();
