@@ -12,6 +12,7 @@ const ticketRoutes = require("./routes/tickets");
 const discoverRoutes = require("./routes/discover");
 const buyerAuthRoutes = require("./routes/buyerAuth");
 const buyerRoutes = require("./routes/buyer");
+const strategyCallRoutes = require("./routes/strategyCall");
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use("/api/tickets", ticketRoutes);
 app.use("/api/discover", discoverRoutes);
 app.use("/api/buyer-auth", buyerAuthRoutes);
 app.use("/api/buyer", buyerRoutes);
+app.use("/api/strategy-call", strategyCallRoutes);
 
 app.use((req, res) => res.status(404).json({ ok: false, error: "NOT_FOUND" }));
 
