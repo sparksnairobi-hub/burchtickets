@@ -12,7 +12,7 @@ I build modern digital solutions that increase revenue and improve customer expe
 - 🤖 AI Revenue Assistant
 - 🌍 Tourism & Hospitality Technology
 - 📈 Business Automation Systems
-- AI intergration for start-ups
+- 🤖 AI Integration for Startups
 
 ## 🛠 Tech Stack
 
