@@ -1,4 +1,4 @@
-# Hi, I'm Charles Matu
+# # Hi, I'm Charles Matu 👋
 
 ## Commercial Director • AI Builder • Revenue Strategist
 
