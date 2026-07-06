@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -37,6 +38,13 @@ app.use("/api/buyer-auth", buyerAuthRoutes);
 app.use("/api/buyer", buyerRoutes);
 app.use("/api/strategy-call", strategyCallRoutes);
 app.use("/api/ai", aiRoutes);
+
+// Serve frontend static files (repo/frontend)
+app.use(express.static(path.join(__dirname, '../../frontend')));
+// For any non-API route, serve index.html so client-side routing works
+app.get(/^\/(?!api\/).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, '../../frontend/index.html'));
+});
 
 app.use((req, res) => res.status(404).json({ ok: false, error: "NOT_FOUND" }));
 
