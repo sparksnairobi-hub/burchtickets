@@ -1,0 +1,61 @@
+<!-- AI Revenue Assistant modal -->
+<div class="modal-backdrop hidden" id="aiModal">
+  <div class="modal-card" id="aiModalContent">
+    <h2>AI Revenue Assistant</h2>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:12px;color:var(--ink-soft);margin-bottom:6px;">Task</label>
+      <select id="aiTask">
+        <option value="pricing">Pricing recommendations</option>
+        <option value="email">Email subject lines</option>
+        <option value="copy">Marketing copy</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Event (optional)</label>
+      <select id="aiEvent">
+        <option value="">— none —</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Prompt (optional)</label><textarea id="aiPrompt" rows="3" placeholder="Give context or ask a question…"></textarea></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeAiModal()">Close</button>
+      <button class="btn btn-primary" onclick="submitAiRequest()">Ask AI</button>
+    </div>
+    <div id="aiResults" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<script>
+  function openAiModal(){
+    // populate event list from cached my events
+    const sel = document.getElementById('aiEvent');
+    sel.innerHTML = '<option value="">— none —</option>' + ((window.__myEvents||[]).map(e => `<option value="${e.id}">${e.title}</option>`).join(''));
+    document.getElementById('aiModal').classList.remove('hidden');
+  }
+  function closeAiModal(){ document.getElementById('aiModal').classList.add('hidden'); }
+
+  async function submitAiRequest(){
+    const task = document.getElementById('aiTask').value;
+    const eventId = document.getElementById('aiEvent').value || null;
+    const prompt = document.getElementById('aiPrompt').value.trim() || null;
+    const results = document.getElementById('aiResults');
+    results.innerHTML = '<p style="color:var(--ink-soft)">Thinking…</p>';
+    try{
+      const body = { task, prompt }; if (eventId) body.eventId = Number(eventId);
+      const data = await api('/ai/revenue', { method:'POST', auth:true, body });
+      results.innerHTML = `<pre style="white-space:pre-wrap;font-size:13px;color:var(--onyx);">${escapeHtml(data.suggestions)}</pre>`;
+    }catch(err){ results.innerHTML = `<p style="color:var(--err);">${friendlyError(err)}</p>`; }
+  }
+  function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // add an AI button to the dashboard header
+  (function addAiButton(){
+    const container = document.querySelector('.panel-head');
+    if (!container) return;
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-primary';
+    btn.style.marginLeft = '12px';
+    btn.textContent = 'AI Revenue Assistant';
+    btn.onclick = openAiModal;
+    container.appendChild(btn);
+  })();
+</script>
