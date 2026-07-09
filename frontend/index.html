@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,18 +31,30 @@
     padding:7px 16px 7px 12px;border-radius:999px 10px 10px 999px;
     background:linear-gradient(135deg,rgba(244,213,62,.14),rgba(244,213,62,.03));
     border:1px solid rgba(176,141,87,.4);
+    box-shadow:0 0 0 0 rgba(244,213,62,0);
     transform-origin:left center;
-    animation:logoPop 5.5s ease-in-out infinite;transition:transform .2s ease,border-color .2s ease;}
-  .logo:hover{transform:scale(1.06);border-color:rgba(244,213,62,.75);animation-play-state:paused;}
+    animation:logoPop 5.5s ease-in-out infinite;
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1), border-color .3s ease,
+      box-shadow .35s ease, letter-spacing .3s ease;}
+  .logo:hover{transform:scale(1.08) rotate(-1deg);border-color:rgba(244,213,62,.85);
+    letter-spacing:.6px;animation-play-state:paused;
+    box-shadow:0 0 0 1px rgba(244,213,62,.25), 0 6px 20px rgba(244,213,62,.22), 0 0 34px rgba(244,213,62,.18);}
   .logo em{font-style:italic;color:var(--onyx);font-weight:500;margin-left:8px;padding-left:9px;
-    border-left:1.5px dashed rgba(176,141,87,.55);}
+    border-left:1.5px dashed rgba(176,141,87,.55);transition:border-color .3s ease;}
+  .logo:hover em{border-left-color:rgba(244,213,62,.85);}
   .logo::before{content:'';display:inline-block;width:11px;height:11px;background:var(--accent);
     border-radius:50%;margin-right:8px;vertical-align:middle;box-shadow:0 0 0 2px rgba(244,213,62,.18);
-    animation:dotPop 5.5s ease-in-out infinite;}
+    animation:dotPop 5.5s ease-in-out infinite;transition:box-shadow .3s ease;}
+  .logo:hover::before{box-shadow:0 0 0 3px rgba(244,213,62,.3), 0 0 12px 2px rgba(244,213,62,.55);}
   .logo::after{content:'';position:absolute;top:0;bottom:0;left:-60%;width:40%;
-    background:linear-gradient(115deg,transparent,rgba(255,255,255,.55),transparent);
+    background:linear-gradient(115deg,transparent,rgba(255,255,255,.65),transparent);
     transform:skewX(-20deg);transition:left .55s ease;pointer-events:none;}
   .logo:hover::after{left:130%;}
+  /* second, slower shimmer pass for a richer gold sweep on hover */
+  .logo .logo-shine2{position:absolute;top:0;bottom:0;left:-80%;width:26%;
+    background:linear-gradient(115deg,transparent,rgba(255,224,102,.4),transparent);
+    transform:skewX(-20deg);transition:left .85s ease .1s;pointer-events:none;}
+  .logo:hover .logo-shine2{left:150%;}
   .footer-brand .logo{background:linear-gradient(135deg,rgba(244,213,62,.16),rgba(244,213,62,.04));
     border-color:rgba(244,213,62,.35);}
   .footer-brand .logo em{border-left-color:rgba(244,213,62,.4);}
@@ -63,27 +74,70 @@
   /* ---- Intro splash screen — premium event-ticket entrance ---- */
   #introSplash{position:fixed;inset:0;z-index:200;background:
       radial-gradient(ellipse at 50% 40%, #23262e 0%, var(--onyx) 62%);
-    display:flex;align-items:center;justify-content:center;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
     animation:splashOut .9s ease forwards;animation-delay:3.75s;}
   #introSplash.hide{pointer-events:none;}
 
-  .ticket-stage{perspective:1200px;}
+  /* slow rotating gold light rays behind the ticket, for depth */
+  .splash-rays{position:absolute;inset:-20%;pointer-events:none;
+    background:conic-gradient(from 0deg,
+      transparent 0deg, rgba(244,213,62,.05) 8deg, transparent 26deg,
+      transparent 120deg, rgba(244,213,62,.04) 130deg, transparent 150deg,
+      transparent 260deg, rgba(244,213,62,.05) 270deg, transparent 290deg,
+      transparent 360deg);
+    opacity:0;
+    animation:raysSpin 22s linear infinite, raysFadeIn 1.4s ease forwards .3s;}
+  @keyframes raysSpin{ to{ transform:rotate(360deg); } }
+  @keyframes raysFadeIn{ to{ opacity:1; } }
+
+  /* soft pulsing gold halo directly behind the ticket */
+  .splash-glow{position:absolute;width:min(80vw,760px);aspect-ratio:1;border-radius:50%;
+    background:radial-gradient(circle, rgba(244,213,62,.22) 0%, rgba(244,213,62,.08) 35%, transparent 68%);
+    filter:blur(4px);pointer-events:none;opacity:0;
+    animation:glowIn 1.2s ease forwards .5s, glowPulse 3.2s ease-in-out infinite 1.7s;}
+  @keyframes glowIn{ to{ opacity:1; } }
+  @keyframes glowPulse{ 0%,100%{ transform:scale(1); opacity:.85; } 50%{ transform:scale(1.08); opacity:1; } }
+
+  /* drifting sparkle motes around the ticket */
+  .splash-sparkle{position:absolute;border-radius:50%;background:var(--accent-hi);
+    box-shadow:0 0 6px 1px rgba(255,224,102,.9), 0 0 14px 4px rgba(244,213,62,.35);
+    opacity:0;animation:sparkleFloat 3.6s ease-in-out infinite;}
+  @keyframes sparkleFloat{
+    0%{opacity:0;transform:translateY(6px) scale(.4);}
+    12%{opacity:1;transform:translateY(0) scale(1);}
+    50%{opacity:.85;transform:translateY(-10px) scale(1.05);}
+    88%{opacity:.3;transform:translateY(-18px) scale(.8);}
+    100%{opacity:0;transform:translateY(-22px) scale(.4);}
+  }
+  .sp-1{width:5px;height:5px;top:8%;left:14%;animation-delay:2.1s;}
+  .sp-2{width:3px;height:3px;top:22%;left:82%;animation-delay:2.5s;}
+  .sp-3{width:4px;height:4px;top:70%;left:88%;animation-delay:2.9s;}
+  .sp-4{width:3px;height:3px;top:80%;left:10%;animation-delay:2.3s;}
+  .sp-5{width:5px;height:5px;top:12%;left:60%;animation-delay:3.1s;}
+  .sp-6{width:3px;height:3px;top:55%;left:5%;animation-delay:2.7s;}
+
+  .ticket-stage{perspective:1200px;position:relative;display:flex;align-items:center;justify-content:center;}
   .ticket{
     position:relative;width:min(88vw,620px);aspect-ratio:640/250;
     background:linear-gradient(150deg,#20232b 0%,#15171c 60%,#101216 100%);
-    border:1px solid rgba(244,213,62,.4);
+    border:1px solid rgba(244,213,62,.45);
     border-radius:20px;
-    box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(244,213,62,.06) inset,
-      0 0 60px rgba(244,213,62,.08);
+    box-shadow:0 30px 90px rgba(0,0,0,.6), 0 0 0 1px rgba(244,213,62,.08) inset,
+      0 0 90px rgba(244,213,62,.16), 0 0 160px rgba(244,213,62,.06);
     display:flex;overflow:hidden;
     opacity:0;transform:scale(.35) rotate(-10deg) translateY(50px);
-    animation:ticketEnter 1.5s cubic-bezier(.22,1.42,.4,1) forwards .15s;
+    animation:ticketEnter 1.6s cubic-bezier(.19,1.5,.36,1) forwards .15s,
+      ticketFloat 4.5s ease-in-out infinite 1.75s;
   }
   @keyframes ticketEnter{
     0%{opacity:0;transform:scale(.35) rotate(-10deg) translateY(60px);}
     55%{opacity:1;transform:scale(1.07) rotate(2deg) translateY(-6px);}
     75%{transform:scale(.97) rotate(-1deg) translateY(2px);}
     100%{opacity:1;transform:scale(1) rotate(0deg) translateY(0);}
+  }
+  @keyframes ticketFloat{
+    0%,100%{ transform:scale(1) rotate(0deg) translateY(0); }
+    50%{ transform:scale(1) rotate(.3deg) translateY(-5px); }
   }
 
   .ticket-main{flex:1;position:relative;padding:clamp(18px,4vw,34px) clamp(20px,4vw,38px);
@@ -95,6 +149,7 @@
     font-size:clamp(30px,7vw,58px);line-height:1;letter-spacing:.2px;
     background:linear-gradient(100deg,#8a6d1f 0%,var(--accent) 25%,#fff7d6 45%,var(--accent) 65%,#8a6d1f 100%);
     background-size:220% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 18px rgba(244,213,62,.35)) drop-shadow(0 0 4px rgba(255,247,214,.25));
     opacity:0;transform:translateY(14px);
     animation:fadeUp .7s ease forwards 1.05s, shimmerText 3.5s linear infinite 1.9s;}
   .ticket-word em{font-style:italic;}
@@ -409,7 +464,15 @@
 <body class="no-scroll">
 
 <div id="introSplash">
+  <div class="splash-rays"></div>
   <div class="ticket-stage">
+    <div class="splash-glow"></div>
+    <div class="splash-sparkle sp-1"></div>
+    <div class="splash-sparkle sp-2"></div>
+    <div class="splash-sparkle sp-3"></div>
+    <div class="splash-sparkle sp-4"></div>
+    <div class="splash-sparkle sp-5"></div>
+    <div class="splash-sparkle sp-6"></div>
     <div class="ticket">
       <div class="ticket-shine"></div>
       <div class="ticket-notch top"></div>
@@ -459,7 +522,7 @@
 
 
 <header>
-  <div class="logo" onclick="navigate('home')">Burch<em>Tickets</em></div>
+  <div class="logo" onclick="navigate('home')">Burch<em>Tickets</em><span class="logo-shine2"></span></div>
   <div class="nav-links" id="mainNav">
     <a onclick="navigate('home')">Home</a>
     <a onclick="navigate('browse')">Browse Events</a>
@@ -702,7 +765,7 @@
 <footer class="site-footer">
   <div class="footer-top">
     <div class="footer-brand">
-      <div class="logo">Burch<em>Tickets</em></div>
+      <div class="logo">Burch<em>Tickets</em><span class="logo-shine2"></span></div>
       <p>Making ticketing simple — browse, pay with M-Pesa, and get a scannable PDF ticket in seconds.</p>
       <div class="newsletter">
         <input type="email" placeholder="E-mail address">
@@ -1269,10 +1332,6 @@
     REQUEST_FAILED: 'Something went wrong — please try again.',
     BAD_RESPONSE: "We didn't get a valid response from the server — please try again.",
   };
-  // Raw browser fetch errors (not our own API error codes) — these vary by
-  // browser ("Load failed" on Safari/WebKit, "Failed to fetch" on Chrome,
-  // "NetworkError..." on Firefox) and almost always mean the API server
-  // isn't reachable at all, so show one clear message instead of the raw text.
   const NETWORK_ERROR_PATTERNS = [/load failed/i, /failed to fetch/i, /networkerror/i, /network request failed/i];
   function friendlyError(err){
     const msg = err && err.message || '';
@@ -1285,7 +1344,6 @@
 
   async function api(path, opts = {}){
     if (DEMO_MODE){
-      // Small artificial delay so loading states in the UI feel real.
       await new Promise(r => setTimeout(r, 220 + Math.random()*260));
       return demoApi(path, opts);
     }
@@ -1367,7 +1425,6 @@
     if (name === 'events') loadMyEvents();
   }
 
-  /* ---- buyer account (separate from organizer auth above) ---- */
   function setBuyerLoggedInUI(name){
     document.getElementById('navBuyerUser').classList.remove('hidden');
     document.getElementById('navBuyerLogin').classList.add('hidden');
@@ -1539,7 +1596,6 @@
     }catch(err){ showToast(friendlyError(err), true); }
   }
 
-  /* ---- ticket tier manager ---- */
   async function openTierManager(eventId){
     const ev = (window.__myEvents || []).find(e => e.id === eventId);
     if (!ev) return showToast("Couldn't find that event.", true);
@@ -1612,7 +1668,7 @@
     }
     const reader = new FileReader();
     reader.onload = () => {
-      pendingCoverBase64 = reader.result; // data URL, e.g. data:image/jpeg;base64,...
+      pendingCoverBase64 = reader.result;
       document.getElementById('coverPreview').src = pendingCoverBase64;
       document.getElementById('coverPreviewWrap').classList.remove('hidden');
       document.getElementById('coverUploadText').textContent = file.name;
@@ -1877,7 +1933,7 @@
       if (isPesapal && !DEMO_MODE){
         if (data.payment?.redirectUrl){
           sessionStorage.setItem('burchtickets_pending_order', String(data.orderId));
-          window.location.href = data.payment.redirectUrl; // hands off to Pesapal's hosted page
+          window.location.href = data.payment.redirectUrl;
           return;
         }
         throw new Error(data.paymentError || 'PESAPAL_ORDER_FAILED');
@@ -1906,7 +1962,7 @@
         document.getElementById('ticketWaiting').innerHTML = `<span style="font-size:13px;color:var(--err);">The M-Pesa request wasn't confirmed. Go back and try again.</span>`;
         return;
       }
-      if (attempt > 40){ // ~2 minutes at 3s intervals
+      if (attempt > 40){
         document.getElementById('ticketStatusMsg').textContent = 'Still waiting…';
         document.getElementById('ticketWaiting').innerHTML = `<span style="font-size:13px;color:var(--ink-soft);">This is taking longer than usual. Check your phone, or refresh in a moment.</span>`;
         return;
@@ -1917,8 +1973,6 @@
     }
   }
 
-  /* ---- client-side PDF ticket generation (replaces the backend's
-     /tickets/:code/pdf endpoint, which doesn't exist in demo mode) ---- */
   function registerTicketMeta(code, meta){
     window.__ticketMeta = window.__ticketMeta || {};
     window.__ticketMeta[code] = meta;
@@ -1939,8 +1993,6 @@
 
   async function downloadTicketPdf(code){
     if (!DEMO_MODE){
-      // Real backend generates this PDF server-side (ticketPdf.js) with the
-      // same QR code it emails to the buyer — just open it directly.
       window.open(`${API_BASE}/tickets/${code}/pdf`, '_blank');
       return;
     }
@@ -2041,10 +2093,6 @@
     `;}).join('') + `<p style="font-size:12px;color:var(--ink-soft);margin-top:14px;">${DEMO_MODE ? 'Emailed to you as a PDF, too — just in case. (In this demo, use the button above.)' : 'Also emailed to you as a PDF — just in case.'}</p>`;
   }
 
-  // Pesapal redirects the buyer's browser back here after they pay on its
-  // hosted page (see PESAPAL_CALLBACK_URL). We land fresh on index.html
-  // with ?pesapal-return=1&orderId=N, so rebuild a minimal step-4-style
-  // "verifying payment" view and resume polling from there.
   function checkPesapalReturn(){
     const params = new URLSearchParams(window.location.search);
     if (params.get('pesapal-return') !== '1') return;
