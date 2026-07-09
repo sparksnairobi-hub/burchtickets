@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,9 +27,132 @@
   header{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;
     padding:18px clamp(20px,5vw,60px);background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
     border-bottom:1px solid var(--line);}
-  .logo{font-family:var(--display);font-size:22px;font-weight:600;cursor:pointer;letter-spacing:.2px;}
-  .logo em{font-style:italic;color:var(--onyx);font-weight:500;}
-  .logo::before{content:'';display:inline-block;width:10px;height:10px;background:var(--accent);border-radius:50%;margin-right:8px;vertical-align:middle;}
+  .logo{font-family:var(--display);font-size:22px;font-weight:600;cursor:pointer;letter-spacing:.2px;
+    display:inline-flex;align-items:center;position:relative;overflow:hidden;
+    padding:7px 16px 7px 12px;border-radius:999px 10px 10px 999px;
+    background:linear-gradient(135deg,rgba(244,213,62,.14),rgba(244,213,62,.03));
+    border:1px solid rgba(176,141,87,.4);
+    transform-origin:left center;
+    animation:logoPop 5.5s ease-in-out infinite;transition:transform .2s ease,border-color .2s ease;}
+  .logo:hover{transform:scale(1.06);border-color:rgba(244,213,62,.75);animation-play-state:paused;}
+  .logo em{font-style:italic;color:var(--onyx);font-weight:500;margin-left:8px;padding-left:9px;
+    border-left:1.5px dashed rgba(176,141,87,.55);}
+  .logo::before{content:'';display:inline-block;width:11px;height:11px;background:var(--accent);
+    border-radius:50%;margin-right:8px;vertical-align:middle;box-shadow:0 0 0 2px rgba(244,213,62,.18);
+    animation:dotPop 5.5s ease-in-out infinite;}
+  .logo::after{content:'';position:absolute;top:0;bottom:0;left:-60%;width:40%;
+    background:linear-gradient(115deg,transparent,rgba(255,255,255,.55),transparent);
+    transform:skewX(-20deg);transition:left .55s ease;pointer-events:none;}
+  .logo:hover::after{left:130%;}
+  .footer-brand .logo{background:linear-gradient(135deg,rgba(244,213,62,.16),rgba(244,213,62,.04));
+    border-color:rgba(244,213,62,.35);}
+  .footer-brand .logo em{border-left-color:rgba(244,213,62,.4);}
+  @keyframes logoPop{
+    0%,100%{transform:scale(1);}
+    4%{transform:scale(1.14);}
+    8%{transform:scale(0.97);}
+    12%{transform:scale(1);}
+  }
+  @keyframes dotPop{
+    0%,100%{transform:scale(1);}
+    4%{transform:scale(1.5);}
+    8%{transform:scale(0.85);}
+    12%{transform:scale(1);}
+  }
+
+  /* ---- Intro splash screen — premium event-ticket entrance ---- */
+  #introSplash{position:fixed;inset:0;z-index:200;background:
+      radial-gradient(ellipse at 50% 40%, #23262e 0%, var(--onyx) 62%);
+    display:flex;align-items:center;justify-content:center;
+    animation:splashOut .9s ease forwards;animation-delay:3.75s;}
+  #introSplash.hide{pointer-events:none;}
+
+  .ticket-stage{perspective:1200px;}
+  .ticket{
+    position:relative;width:min(88vw,620px);aspect-ratio:640/250;
+    background:linear-gradient(150deg,#20232b 0%,#15171c 60%,#101216 100%);
+    border:1px solid rgba(244,213,62,.4);
+    border-radius:20px;
+    box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(244,213,62,.06) inset,
+      0 0 60px rgba(244,213,62,.08);
+    display:flex;overflow:hidden;
+    opacity:0;transform:scale(.35) rotate(-10deg) translateY(50px);
+    animation:ticketEnter 1.5s cubic-bezier(.22,1.42,.4,1) forwards .15s;
+  }
+  @keyframes ticketEnter{
+    0%{opacity:0;transform:scale(.35) rotate(-10deg) translateY(60px);}
+    55%{opacity:1;transform:scale(1.07) rotate(2deg) translateY(-6px);}
+    75%{transform:scale(.97) rotate(-1deg) translateY(2px);}
+    100%{opacity:1;transform:scale(1) rotate(0deg) translateY(0);}
+  }
+
+  .ticket-main{flex:1;position:relative;padding:clamp(18px,4vw,34px) clamp(20px,4vw,38px);
+    display:flex;flex-direction:column;justify-content:center;gap:8px;}
+  .ticket-eyebrow{font-family:var(--mono);font-size:clamp(9px,1.3vw,11px);letter-spacing:2.5px;
+    text-transform:uppercase;color:var(--champagne-hi);opacity:0;
+    animation:fadeUp .6s ease forwards .95s;}
+  .ticket-word{font-family:var(--display);font-style:italic;font-weight:600;
+    font-size:clamp(30px,7vw,58px);line-height:1;letter-spacing:.2px;
+    background:linear-gradient(100deg,#8a6d1f 0%,var(--accent) 25%,#fff7d6 45%,var(--accent) 65%,#8a6d1f 100%);
+    background-size:220% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
+    opacity:0;transform:translateY(14px);
+    animation:fadeUp .7s ease forwards 1.05s, shimmerText 3.5s linear infinite 1.9s;}
+  .ticket-word em{font-style:italic;}
+  .ticket-sub{font-family:var(--mono);font-size:clamp(9px,1.2vw,11px);letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--navy-soft);opacity:0;
+    animation:fadeUp .6s ease forwards 1.2s;}
+  @keyframes fadeUp{ from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+  @keyframes shimmerText{ to{ background-position:-220% center; } }
+
+  .ticket-notch{position:absolute;width:26px;height:26px;background:var(--onyx);border-radius:50%;
+    left:76%;transform:translateX(-50%) scale(0);z-index:3;
+    animation:notchPop .5s cubic-bezier(.34,1.56,.64,1) forwards 1.05s;}
+  .ticket-notch.top{top:-13px;}
+  .ticket-notch.bottom{bottom:-13px;}
+  @keyframes notchPop{ to{ transform:translateX(-50%) scale(1); } }
+
+  .ticket-divider{position:absolute;left:76%;top:16px;bottom:16px;
+    border-left:2px dashed rgba(244,213,62,.45);transform:scaleY(0);transform-origin:center;
+    animation:dividerDraw .5s ease forwards 1.15s;}
+  @keyframes dividerDraw{ to{ transform:scaleY(1); } }
+
+  .ticket-stub{width:24%;position:relative;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:10px;padding:10px 6px;
+    opacity:0;animation:fadeUp .6s ease forwards 1.35s;}
+  .stub-admit{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--mono);
+    font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--champagne);}
+  .stub-barcode{display:flex;align-items:flex-end;gap:2px;height:34px;}
+  .stub-barcode span{display:block;width:2.5px;background:rgba(244,213,62,.65);
+    transform:scaleY(0);transform-origin:bottom;
+    animation:barGrow .4s ease forwards;}
+  .stub-barcode span:nth-child(1){height:60%;animation-delay:1.5s;}
+  .stub-barcode span:nth-child(2){height:100%;animation-delay:1.54s;}
+  .stub-barcode span:nth-child(3){height:45%;animation-delay:1.58s;}
+  .stub-barcode span:nth-child(4){height:80%;animation-delay:1.62s;}
+  .stub-barcode span:nth-child(5){height:30%;animation-delay:1.66s;}
+  .stub-barcode span:nth-child(6){height:90%;animation-delay:1.7s;}
+  .stub-barcode span:nth-child(7){height:55%;animation-delay:1.74s;}
+  .stub-barcode span:nth-child(8){height:70%;animation-delay:1.78s;}
+  @keyframes barGrow{ to{ transform:scaleY(1); } }
+  .stub-code{font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--navy-soft);
+    opacity:0;animation:fadeUp .5s ease forwards 1.85s;}
+
+  .ticket-shine{position:absolute;inset:0;pointer-events:none;z-index:2;
+    background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.4) 50%,transparent 58%);
+    transform:translateX(-140%);mix-blend-mode:overlay;
+    animation:shineSweep 1.3s ease forwards 1.65s;}
+  @keyframes shineSweep{ to{ transform:translateX(140%); } }
+
+  @keyframes splashOut{
+    0%{opacity:1;visibility:visible;}
+    99%{opacity:0;visibility:visible;}
+    100%{opacity:0;visibility:hidden;}
+  }
+  body.no-scroll{overflow:hidden;}
+  @media (prefers-reduced-motion: reduce){
+    #introSplash{display:none;}
+    .logo, .logo::before{animation:none;}
+  }
   .nav-links{display:flex;align-items:center;gap:26px;}
   .nav-links a{font-size:13px;letter-spacing:.4px;font-weight:600;color:var(--ink-soft);}
   .nav-links a:hover{color:var(--onyx);}
@@ -282,7 +406,30 @@
   @media (max-width:480px){ .nairobi-feed-panel{width:calc(100vw - 40px);} }
 </style>
 </head>
-<body>
+<body class="no-scroll">
+
+<div id="introSplash">
+  <div class="ticket-stage">
+    <div class="ticket">
+      <div class="ticket-shine"></div>
+      <div class="ticket-notch top"></div>
+      <div class="ticket-notch bottom"></div>
+      <div class="ticket-main">
+        <div class="ticket-eyebrow">Premium Event Access</div>
+        <div class="ticket-word">Burch<em>Tickets</em></div>
+        <div class="ticket-sub">Admit One · Nairobi</div>
+      </div>
+      <div class="ticket-divider"></div>
+      <div class="ticket-stub">
+        <span class="stub-admit">Admit One</span>
+        <div class="stub-barcode">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="stub-code">BT-2026</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
@@ -381,10 +528,10 @@
         <div style="margin-top:34px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:var(--shadow);">
           <div style="display:flex;justify-content:space-between;align-items:baseline;">
             <span style="font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);">Commission</span>
-            <span style="font-family:var(--display);font-style:italic;font-size:28px;color:var(--wine);">10%</span>
+            <span style="font-family:var(--display);font-style:italic;font-size:28px;color:var(--wine);">4%</span>
           </div>
           <p style="color:var(--ink-soft);font-size:13px;margin-top:6px;line-height:1.6;">
-            Charged on top of your ticket price and paid by the buyer at checkout — so the 10% never comes out of your listed price. You keep 100% of what you set.
+            Charged on top of your ticket price and paid by the buyer at checkout — so the 4% never comes out of your listed price. You keep 100% of what you set. It's the lowest rate we offer, because when our organizers earn more, we all do.
           </p>
         </div>
 
@@ -403,7 +550,7 @@
           </div>
           <div style="display:flex;gap:14px;">
             <div class="step-dot" style="flex-shrink:0;">4</div>
-            <div><div style="font-weight:600;font-size:14px;">Get paid</div><div style="color:var(--ink-soft);font-size:13px;margin-top:2px;">Buyer pays via M-Pesa, we deduct our 10%, and the rest is yours — tracked live in your dashboard.</div></div>
+            <div><div style="font-weight:600;font-size:14px;">Get paid</div><div style="color:var(--ink-soft);font-size:13px;margin-top:2px;">Buyer pays via M-Pesa, we deduct our 4% — one of the lowest rates around — and the rest is yours, tracked live in your dashboard.</div></div>
           </div>
         </div>
       </div>
@@ -462,7 +609,7 @@
         <div class="panel-head"><h2>Overview</h2><p>Here's how your events are performing.</p></div>
         <div id="statusBanner"></div>
         <div class="stats-grid" id="statsGrid"></div>
-        <div style="color:var(--ink-soft);font-size:12.5px;">BurchTickets commission: <strong style="color:var(--onyx);">10% per ticket</strong>, deducted automatically before payout.</div>
+        <div style="color:var(--ink-soft);font-size:12.5px;">BurchTickets commission: <strong style="color:var(--onyx);">4% per ticket</strong> — the lowest we offer, deducted automatically before payout.</div>
       </div>
 
       <div class="dash-panel" id="panel-events">
@@ -588,6 +735,16 @@
 </footer>
 
 <script>
+  // ---- Intro splash cleanup: unlock scroll and remove the node once the
+  // pop-in/out entrance animation finishes, so it never blocks input. ----
+  (function initSplash(){
+    const splash = document.getElementById('introSplash');
+    if (!splash) return;
+    const done = () => { document.body.classList.remove('no-scroll'); splash.remove(); };
+    splash.addEventListener('animationend', (e) => { if (e.animationName === 'splashOut') done(); });
+    setTimeout(done, 5000); // safety net in case the animationend event doesn't fire
+  })();
+
   const API_BASE = window.BURCHTICKETS_API_BASE || "http://localhost:4000/api";
   let authToken = null;
   let currentCompany = null;
@@ -770,8 +927,8 @@
       const companyEventIds = db.events.filter(e => e.companyId === company.id).map(e=>e.id);
       const paidOrders = db.orders.filter(o => companyEventIds.includes(o.eventId) && o.status === 'paid');
       const grossRevenue = paidOrders.reduce((s,o)=> s + orderSubtotal(db,o), 0);
-      const commission = +(grossRevenue * 0.10).toFixed(2);
-      return { ok:true, commissionRate:10, stats:{
+      const commission = +(grossRevenue * 0.04).toFixed(2);
+      return { ok:true, commissionRate:4, stats:{
         company_status: company.status, total_events: companyEventIds.length,
         paid_orders: paidOrders.length, gross_revenue: grossRevenue, commission_paid: commission,
       }};
@@ -1677,7 +1834,7 @@
       return showToast('Fill in your name, email, and phone.', true);
     }
     const subtotal = items.reduce((sum,i)=>sum + i.tier.price * i.quantity, 0);
-    const commission = +(subtotal * 0.10).toFixed(2);
+    const commission = +(subtotal * 0.04).toFixed(2);
     const total = subtotal + commission;
     document.getElementById('orderSummary').innerHTML = `
       ${items.map(i => `<div class="row"><span>${i.tier.name} × ${i.quantity}</span><span>KES ${i.tier.price * i.quantity}</span></div>`).join('')}
@@ -1914,5 +2071,3 @@
 </script>
 </body>
 </html>
-index 10.html
-Displaying index 10.html.
